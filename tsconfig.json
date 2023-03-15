@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "#server/common": [
+        "server/common/index.mjs"
+      ],
+      "#server": [
+        "server/index.mjs"
+      ],
+      "#config": [
+        "config/index.mjs"
+      ],
+      "#config/*": [
+        "config/*.mjs"
+      ],
+      "#ingest": [
+        "ingest/index.mjs"
+      ],
+      "#ingest/*": [
+        "ingest/*.mjs"
+      ],
+      "#utils/*": [
+        "utils/*.mjs"
+      ]
+    }
+  },
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

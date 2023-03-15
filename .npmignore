@@ -1,0 +1,31 @@
+.DS_Store
+
+.circleci
+.husky
+
+.editorconfig
+
+.eslintignore
+.eslintrc
+
+.github
+.gitignore
+
+# NPM
+.npmignore
+.npmrc
+
+# NVM
+.nvmrc
+
+# Deps
+.depsrc
+
+# CSV
+.source
+
+# JSON
+.target
+
+# Vars
+.env
