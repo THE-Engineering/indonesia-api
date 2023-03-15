@@ -12,6 +12,10 @@
     "type": "git",
     "url": "git+https://github.com/THE-Engineering/indonesia-api.git"
   },
+  "homepage": "https://github.com/THE-Engineering/indonesia-api#readme",
+  "bugs": {
+    "url": "https://github.com/THE-Engineering/indonesia-api/issues"
+  },
   "scripts": {
     "start": "node .",
     "lint": "eslint . --ext .mjs --ext .cjs",
