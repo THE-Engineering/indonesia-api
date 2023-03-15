@@ -90,44 +90,44 @@ Response data is filtered based on the request query parameter values
 
 Use `curl` in another terminal to request data
 
-Assuming the server is running on port `3001` with Basic Auth credentials `{"username":"password"}`
+Assuming the server is running on port `80` with Basic Auth credentials `{"username":"password"}`
 
 ```bash
-curl http://localhost:3001/wurportal \
+curl http://localhost/wurportal \
   -u username:password
 ```
 
 ```bash
-curl http://localhost:3001/wurcitations \
+curl http://localhost/wurcitations \
   -u username:password
 ```
 
 ```bash
-curl http://localhost:3001/wurmetrics \
+curl http://localhost/wurmetrics \
   -u username:password
 ```
 
 And using the route `/wurportal` with query parameters
 
 ```bash
-curl http://localhost:3001/wurportal?institution_id=i-33670869 \
+curl http://localhost/wurportal?institution_id=i-33670869 \
   -u username:password
 ```
 
 ```bash
-curl http://localhost:3001/wurportal?year=2020 \
+curl http://localhost/wurportal?year=2020 \
   -u username:password
 ```
 
 ```bash
-curl http://localhost:3001/wurportal?subject_id=law \
+curl http://localhost/wurportal?subject_id=law \
   -u username:password
 ```
 
 Or, combined
 
 ```bash
-curl http://localhost:3001/wurportal?institution_id=i-33670869&year=2020&subject_id=law \
+curl http://localhost/wurportal?institution_id=i-33670869&year=2020&subject_id=law \
   -u username:password
 ```
 
