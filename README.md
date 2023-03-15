@@ -72,7 +72,7 @@ You can request data from any of three routes
 - `/wurcitations`
 - `/wurmetrics`
 
-And each route accepts up to three query parameters
+And each route accepts three query parameters in any combination
 
 - `institution_id`
 - `year`
@@ -90,7 +90,7 @@ Response data is filtered based on the request query parameter values
 
 Use `curl` in another terminal to request data
 
-Provided the server is running on port `3001` with Basic Auth credentials `{"username":"password"}`
+Assuming the server is running on port `3001` with Basic Auth credentials `{"username":"password"}`
 
 ```bash
 curl http://localhost:3001/wurportal \
@@ -128,5 +128,21 @@ Or, combined
 
 ```bash
 curl http://localhost:3001/wurportal?institution_id=i-33670869&year=2020&subject_id=law \
+  -u username:password
+```
+
+## Docker
+
+```bash
+docker build -t indonesia-api .
+docker compose up -d
+```
+
+The container exposes the application on port `3001` of the host environment
+
+Assuming Basic Auth credentials `{"username":"password"}`
+
+```bash
+curl http://localhost:3001/wurportal \
   -u username:password
 ```
