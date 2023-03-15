@@ -2,6 +2,10 @@ version: '3'
 services:
   indonesia-api:
     image: 'node:18.15-alpine'
+    expose:
+      - 3001
+    ports:
+      - 3001:${PORT}
     container_name: indonesia-api
     working_dir: /app
     restart: unless-stopped
