@@ -133,8 +133,15 @@ curl http://localhost/wurportal?institution_id=i-33670869&year=2020&subject_id=l
 
 ## Docker
 
+### Building the Docker image
+
 ```bash
 docker build -t indonesia-api .
+```
+
+### Starting the Docker container
+
+```bash
 docker compose up -d
 ```
 
