@@ -26,6 +26,9 @@ import getHasFilePathMiddleware from './server/middlewares/get-has-file-path-mid
 import getFilePathMiddleware from './server/middlewares/get-file-path-middleware.mjs'
 import getFileDataMiddleware from './server/middlewares/get-file-data-middleware.mjs'
 import renderRoute from './server/render-route.mjs'
+import {
+  NOT_FOUND
+} from './server/common/index.mjs'
 
 const app = express()
 
@@ -80,6 +83,10 @@ ingest()
       getFilePathMiddleware(WUR_REF_DATA_FILE_PATH),
       getFileDataMiddleware(WUR_REF_DATA_FILE_PATH, WUR_REF_DATA_KEY_MAP),
       renderRoute)
+
+    app.use((req, res) => {
+      res.json(NOT_FOUND)
+    })
 
     app.listen(PORT, () => {
       console.log('🚀')
