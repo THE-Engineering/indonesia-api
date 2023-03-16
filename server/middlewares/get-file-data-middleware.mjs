@@ -5,7 +5,17 @@
  */
 
 /**
+ * Map from query parameter keys to data file values
+ *
+ * @typedef {Object} KeyMap
+ * @property {string} [institution_id] - Key for the institution ID value
+ * @property {string} [year] - Key for the year value
+ * @property {string} [subject_id] - Key for the subject ID value
+ */
+
+/**
  * Request query
+ *
  * @typedef {Object} RequestQuery
  * @property {string} [institution_id] - An institution
  * @property {string} [year] - A year
@@ -14,6 +24,7 @@
 
 /**
  * Response locals
+ *
  * @typedef {Object} ResponseLocals
  * @property {string} [filePath] - A file path
  */
@@ -25,21 +36,26 @@ import {
   writeFile
 } from 'node:fs/promises'
 
+const INSTITUTION_ID_KEY = 'institution_id'
+const YEAR_KEY = 'year'
+const SUBJECT_ID_KEY = 'subject_id'
+
 /**
  * Generates the file data for `institution_id` queries
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
+ * @param {KeyMap} keyMap - The map from query parameter keys to file data values
  * @returns {object[]} The filtered/current file data
  *
  * Where `institution_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
  */
-function getQueryFileDataForInstitutionId (query, fileData) {
+function getQueryFileDataForInstitutionId (query, fileData, { [INSTITUTION_ID_KEY]: key = INSTITUTION_ID_KEY }) {
   if (Reflect.has(query, 'institution_id')) {
-    const ID = Reflect.get(query, 'institution_id').toLowerCase()
+    const INSTITUTION_ID = Reflect.get(query, 'institution_id').toLowerCase()
 
-    return fileData.filter(({ id }) => id.toLowerCase() === ID)
+    return fileData.filter(({ [key]: institutionId }) => institutionId.toLowerCase() === INSTITUTION_ID)
   }
 
   return fileData
@@ -50,16 +66,17 @@ function getQueryFileDataForInstitutionId (query, fileData) {
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
+ * @param {KeyMap} keyMap - The map from query parameter keys to file data values
  * @returns {object[]} The filtered/current file data
  *
  * Where `year` is present in the query we filter the file data
  * for it. Otherwise, we return the file data as-is
  */
-function getQueryFileDataForYear (query, fileData) {
+function getQueryFileDataForYear (query, fileData, { [YEAR_KEY]: key = YEAR_KEY }) {
   if (Reflect.has(query, 'year')) {
     const YEAR = Reflect.get(query, 'year')
 
-    return fileData.filter(({ year }) => year === YEAR)
+    return fileData.filter(({ [key]: year }) => year === YEAR)
   }
 
   return fileData
@@ -70,16 +87,17 @@ function getQueryFileDataForYear (query, fileData) {
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
+ * @param {KeyMap} keyMap - The map from query parameter keys to file data values
  * @returns {object[]} The filtered/current file data
  *
  * Where `subject_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
  */
-function getQueryFileDataForSubjectId (query, fileData) {
+function getQueryFileDataForSubjectId (query, fileData, { [SUBJECT_ID_KEY]: key = SUBJECT_ID_KEY }) {
   if (Reflect.has(query, 'subject_id')) {
-    const SUBJECT = Reflect.get(query, 'subject_id').toLowerCase()
+    const SUBJECT_ID = Reflect.get(query, 'subject_id').toLowerCase()
 
-    return fileData.filter(({ subject }) => subject.toLowerCase() === SUBJECT)
+    return fileData.filter(({ [key]: subjectId }) => subjectId.toLowerCase() === SUBJECT_ID)
   }
 
   return fileData
@@ -90,10 +108,11 @@ function getQueryFileDataForSubjectId (query, fileData) {
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The file data
+ * @param {KeyMap} keyMap - The map from query parameter keys to file data values
  * @returns {string} The file path
  */
-function getQueryFileData (query, fileData) {
-  return getQueryFileDataForSubjectId(query, getQueryFileDataForYear(query, getQueryFileDataForInstitutionId(query, fileData)))
+function getQueryFileData (query, fileData, keyMap) {
+  return getQueryFileDataForSubjectId(query, getQueryFileDataForYear(query, getQueryFileDataForInstitutionId(query, fileData, keyMap), keyMap), keyMap)
 }
 
 /**
@@ -125,11 +144,12 @@ async function writeToFilePath (filePath, value) {
  * @param {string} toPath
  * @param {RequestQuery} query
  * @param {string} fromPath
+ * @param {KeyMap} keyMap
  * @returns {Promise<void>}
  */
-async function render (toPath, query, fromPath) {
+async function render (toPath, query, fromPath, keyMap) {
   try {
-    await writeToFilePath(toPath, getQueryFileData(query, await readFromFilePath(fromPath)))
+    await writeToFilePath(toPath, getQueryFileData(query, await readFromFilePath(fromPath), keyMap))
   } catch ({
     message
   }) {
@@ -141,14 +161,15 @@ async function render (toPath, query, fromPath) {
  * Gets the middleware for filtering and generating the file data to stream
  *
  * @param {string} fromPath - A JSON file path
+ * @param {KeyMap} keyMap - A map between query parameter keys and data file values
  * @returns {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
  */
-export default function getFileDataMiddleware (fromPath) {
+export default function getFileDataMiddleware (fromPath, keyMap) {
   return async function fileDataMiddleware ({ query }, { locals: { filePath: toPath = '' } }, next) {
     try {
       await access(toPath, constants.R_OK)
     } catch {
-      await render(toPath, query, fromPath)
+      await render(toPath, query, fromPath, keyMap)
     }
 
     next()
