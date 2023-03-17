@@ -42,42 +42,42 @@ app.use(basicAuth({
 
 ingest()
   .then(() => {
-    app.get('/impactoverall',
+    app.get('/impact-overall',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(IMPACT_OVERALL_FILE_PATH),
       getFilePathMiddleware(IMPACT_OVERALL_FILE_PATH),
       getFileDataMiddleware(IMPACT_OVERALL_FILE_PATH, IMPACT_OVERALL_KEY_MAP),
       renderRoute)
 
-    app.get('/wurportal',
+    app.get('/wur-portal',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(WUR_PORTAL_FILE_PATH),
       getFilePathMiddleware(WUR_PORTAL_FILE_PATH),
       getFileDataMiddleware(WUR_PORTAL_FILE_PATH, WUR_PORTAL_KEY_MAP),
       renderRoute)
 
-    app.get('/wurcitations',
+    app.get('/wur-citations',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(WUR_CITATIONS_FILE_PATH),
       getFilePathMiddleware(WUR_CITATIONS_FILE_PATH),
       getFileDataMiddleware(WUR_CITATIONS_FILE_PATH, WUR_CITATIONS_KEY_MAP),
       renderRoute)
 
-    app.get('/wurmetrics',
+    app.get('/wur-metrics',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(WUR_METRICS_FILE_PATH),
       getFilePathMiddleware(WUR_METRICS_FILE_PATH),
       getFileDataMiddleware(WUR_METRICS_FILE_PATH, WUR_METRICS_KEY_MAP),
       renderRoute)
 
-    app.get('/wuridmapping',
+    app.get('/wur-id-mapping',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(WUR_ID_MAPPING_FILE_PATH),
       getFilePathMiddleware(WUR_ID_MAPPING_FILE_PATH),
       getFileDataMiddleware(WUR_ID_MAPPING_FILE_PATH, WUR_ID_MAPPING_KEY_MAP),
       renderRoute)
 
-    app.get('/wurrefdata',
+    app.get('/wur-ref-data',
       getSchemaMiddleware(SCHEMA),
       getHasFilePathMiddleware(WUR_REF_DATA_FILE_PATH),
       getFilePathMiddleware(WUR_REF_DATA_FILE_PATH),

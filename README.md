@@ -66,11 +66,14 @@ Start the server in a terminal
 npm start
 ```
 
-You can request data from any of three routes
+You can request data from any of six routes
 
-- `/wurportal`
-- `/wurcitations`
-- `/wurmetrics`
+- `/impact-overall`
+- `/wur-portal`
+- `/wur-citations`
+- `/wur-metrics`
+- `/wur-id-mapping`
+- `/wur-ref-data`
 
 And each route accepts three query parameters in any combination
 
@@ -93,41 +96,41 @@ Use `curl` in another terminal to request data
 Assuming the server is running on port `80` with Basic Auth credentials `{"username":"password"}`
 
 ```bash
-curl http://localhost/wurportal \
+curl http://localhost/wur-portal \
   -u username:password
 ```
 
 ```bash
-curl http://localhost/wurcitations \
+curl http://localhost/wur-citations \
   -u username:password
 ```
 
 ```bash
-curl http://localhost/wurmetrics \
+curl http://localhost/wur-metrics \
   -u username:password
 ```
 
-And using the route `/wurportal` with query parameters
+And using the route `/wur-portal` with query parameters
 
 ```bash
-curl http://localhost/wurportal?institution_id=i-33670869 \
-  -u username:password
-```
-
-```bash
-curl http://localhost/wurportal?year=2020 \
+curl http://localhost/wur-portal?institution_id=i-33670869 \
   -u username:password
 ```
 
 ```bash
-curl http://localhost/wurportal?subject_id=law \
+curl http://localhost/wur-portal?year=2020 \
+  -u username:password
+```
+
+```bash
+curl http://localhost/wur-portal?subject_id=law \
   -u username:password
 ```
 
 Or, combined
 
 ```bash
-curl http://localhost/wurportal?institution_id=i-33670869&year=2020&subject_id=law \
+curl http://localhost/wur-portal?institution_id=i-33670869&year=2020&subject_id=law \
   -u username:password
 ```
 
@@ -150,6 +153,6 @@ The container exposes the application on port `3001` of the host environment
 Assuming Basic Auth credentials `{"username":"password"}`
 
 ```bash
-curl http://localhost:3001/wurportal \
+curl http://localhost:3001/wur-portal \
   -u username:password
 ```
