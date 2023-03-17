@@ -1,5 +1,19 @@
 # Indonesia API
 
+## AWS
+
+- Step 1 - [Create an Access Key](docs/create-an-access-key.md)
+- Step 2 - [Decide your Region](docs/decide-your-region.md)
+- Step 3 - [Create a queue with Amazon SQS (Simple Queue Service)](docs/create-a-queue.md)
+- Step 4 - [Create a bucket with Amazon S3](docs/create-a-bucket.md)
+- Step 5 - [Edit the queue to assign an Access Policy](docs/edit-the-queue.md)
+- Step 6 - [Edit the bucket to send events to the queue](docs/edit-the-bucket.md)
+- Step 7 - [Review your `env` file](docs/review-your-env.md)
+
+When these steps have been completed and while this application is running it will listen for message from AWS with Amazon SQS
+
+Those messages are to notify this application of changes in Amazon S3
+
 ## CSV
 
 The default directory for CSV files is `.source`
