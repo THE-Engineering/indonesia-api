@@ -1,4 +1,16 @@
-import AWS from 'aws-sdk'
+import {
+  SQSClient,
+  DeleteMessageCommand,
+  ReceiveMessageCommand
+} from '@aws-sdk/client-sqs'
+import {
+  S3Client,
+  ListObjectsCommand,
+  GetObjectCommand
+} from '@aws-sdk/client-s3'
+import {
+  getSignedUrl
+} from '@aws-sdk/s3-request-presigner'
 
 import {
   dirname,
@@ -84,12 +96,11 @@ async function handleSourcePathRemove (sourcePath) {
  * Generator to read from the SQS queue
  *
  * @generator
+ * @param {S3Client} client
  * @param {string} queueUrl
  * @yields {{Messages: AWS.SQS.MessageList}}
  */
-async function * genMessages (queueUrl) {
-  const SQS = new AWS.SQS({ region: AWS_REGION })
-
+async function * genMessages (client, queueUrl) {
   /**
    *  Switch between long polling and short polling
    *  depending on whether a message has been
@@ -98,14 +109,14 @@ async function * genMessages (queueUrl) {
   let waitTimeSeconds = 20
 
   while (true) {
+    const command = new ReceiveMessageCommand({
+      QueueUrl: queueUrl,
+      WaitTimeSeconds: waitTimeSeconds
+    })
+
     const {
-      Messages
-    } = (
-      await SQS.receiveMessage({
-        QueueUrl: queueUrl,
-        WaitTimeSeconds: waitTimeSeconds
-      }).promise()
-    )
+      Messages = null
+    } = await client.send(command)
 
     if (Messages) {
       /**
@@ -128,6 +139,45 @@ async function * genMessages (queueUrl) {
 }
 
 /**
+ * Gets the S3 signed url with the client for the command
+ *
+ * @param {S3Client} client
+ * @param {GetObjectCommand} command
+ * @returns {Promise<string>}
+ */
+async function toSignedUrl (client, command) {
+  return (
+    await getSignedUrl(client, command, { expiresIn: 3600 })
+  )
+}
+
+/**
+ * Gets the bucket object from S3 and resolves it to a Blob
+ *
+ * @param {string} signedUrl
+ * @returns {Promise<Blob>}
+ */
+async function getObjectBlob (signedUrl) {
+  const response = await fetch(signedUrl)
+
+  return (
+    await response.blob()
+  )
+}
+
+/**
+ * Transforms a Blob to a Buffer
+ *
+ * @param {Blob} blob
+ * @returns {Promise<Buffer>}
+ */
+async function fromBlobToBuffer (blob) {
+  const arrayBuffer = await blob.arrayBuffer()
+
+  return Buffer.from(arrayBuffer)
+}
+
+/**
  * Objects created in the S3 bucket are written to the file system
  *
  * @param {{bucket?: {name: string}, object?: {key: string}}} s3
@@ -144,11 +194,15 @@ async function handleS3ObjectCreated (s3) {
   } = s3
 
   try {
-    const S3 = new AWS.S3({ region: AWS_REGION })
-
-    const {
-      Body: buffer
-    } = await S3.getObject({ Bucket: bucketName, Key: objectKey }).promise()
+    const client = new S3Client({ region: AWS_REGION })
+    const command = new GetObjectCommand({ Bucket: bucketName, Key: objectKey })
+    const buffer = (
+      await fromBlobToBuffer(
+        await getObjectBlob(
+          await toSignedUrl(client, command)
+        )
+      )
+    )
 
     const filePath = join(SOURCE_DIRECTORY, objectKey)
 
@@ -186,7 +240,9 @@ async function handleS3ObjectRemoved (s3 = {}) {
  * @returns {Promise<void>}
  */
 async function readMessageQueue () {
-  for await (const { Messages: messages = [] } of genMessages(AWS_QUEUE_URL)) {
+  const client = new SQSClient({ region: AWS_REGION })
+
+  for await (const { Messages: messages = [] } of genMessages(client, AWS_QUEUE_URL)) {
     while (messages.length) {
       const {
         ReceiptHandle: receiptHandle,
@@ -210,9 +266,12 @@ async function readMessageQueue () {
       }
 
       try {
-        const SQS = new AWS.SQS({ region: AWS_REGION })
+        const command = new DeleteMessageCommand({
+          QueueUrl: AWS_QUEUE_URL,
+          ReceiptHandle: receiptHandle
+        })
 
-        await SQS.deleteMessage({ QueueUrl: AWS_QUEUE_URL, ReceiptHandle: receiptHandle }).promise()
+        await client.send(command)
       } catch (e) {
         handleError(e)
       }
@@ -227,20 +286,27 @@ async function readMessageQueue () {
  */
 async function syncSourceDirectoryWithS3 () {
   try {
-    const S3 = new AWS.S3({ region: AWS_REGION })
+    const client = new S3Client({ region: AWS_REGION })
+    const command = new ListObjectsCommand({ Bucket: AWS_BUCKET_NAME })
 
     const {
       Contents: contents = []
-    } = await S3.listObjects({ Bucket: AWS_BUCKET_NAME }).promise()
+    } = await client.send(command)
 
     while (contents.length) {
       const {
         Key: key
       } = contents.shift()
 
-      const {
-        Body: buffer
-      } = await S3.getObject({ Bucket: AWS_BUCKET_NAME, Key: key }).promise()
+      const client = new S3Client({ region: AWS_REGION })
+      const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
+      const buffer = (
+        await fromBlobToBuffer(
+          await getObjectBlob(
+            await toSignedUrl(client, command)
+          )
+        )
+      )
 
       const filePath = join(SOURCE_DIRECTORY, key)
 
