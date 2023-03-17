@@ -90,4 +90,4 @@ Confirm that the event notifications table has a row with the event notification
 
 ![Amazon S3 Console edit bucket page - event notifications - object removed](images/s3-edit-bucket-page-event-notifications-object-removed.png)
 
-Proceed to Step 7 - [Review your `env` file](review-your-env.md)
+Proceed to Step 7 - [Review your `.env` file](review-your-env.md)
