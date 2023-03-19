@@ -98,7 +98,7 @@ async function handleSourcePathRemove (sourcePath) {
  * @generator
  * @param {S3Client} client
  * @param {string} queueUrl
- * @yields {{Messages: AWS.SQS.MessageList}}
+ * @yields {ReceiveMessageCommandOutput}
  */
 async function * genMessages (client, queueUrl) {
   /**
@@ -114,20 +114,16 @@ async function * genMessages (client, queueUrl) {
       WaitTimeSeconds: waitTimeSeconds
     })
 
-    const {
-      Messages = null
-    } = await client.send(command)
+    const message = await client.send(command)
 
-    if (Messages) {
+    if (Reflect.has(message, 'Messages')) {
       /**
        *  A message has been received from the queue
        *  so ensure short polling, and yield
        */
       waitTimeSeconds = 0
 
-      yield {
-        Messages
-      }
+      yield message
     } else {
       /**
        *  A message has not been received from the queue
@@ -152,13 +148,13 @@ async function toSignedUrl (client, command) {
 }
 
 /**
- * Gets the bucket object from S3 and resolves it to a Blob
+ * Fetches the URL and resolves to a Blob
  *
- * @param {string} signedUrl
+ * @param {string} url - The S3 signed url
  * @returns {Promise<Blob>}
  */
-async function getObjectBlob (signedUrl) {
-  const response = await fetch(signedUrl)
+async function getBlobFromUrl (url) {
+  const response = await fetch(url)
 
   return (
     await response.blob()
@@ -178,35 +174,34 @@ async function fromBlobToBuffer (blob) {
 }
 
 /**
- * Objects created in the S3 bucket are written to the file system
+ *  Gets the bucket object from S3 and resolves it to a Buffer
  *
- * @param {{bucket?: {name: string}, object?: {key: string}}} s3
- * @returns {Promise<void>}
+ * @param {string} key
+ * @returns {Promise<Buffer>}
  */
-async function handleS3ObjectCreated (s3) {
-  const {
-    bucket: {
-      name: bucketName
-    } = {},
-    object: {
-      key: objectKey
-    } = {}
-  } = s3
-
-  try {
-    const client = new S3Client({ region: AWS_REGION })
-    const command = new GetObjectCommand({ Bucket: bucketName, Key: objectKey })
-    const buffer = (
-      await fromBlobToBuffer(
-        await getObjectBlob(
-          await toSignedUrl(client, command)
-        )
+async function getS3ObjectFor (key) {
+  const client = new S3Client({ region: AWS_REGION })
+  const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
+  return (
+    await fromBlobToBuffer(
+      await getBlobFromUrl(
+        await toSignedUrl(client, command)
       )
     )
+  )
+}
 
-    const filePath = join(SOURCE_DIRECTORY, objectKey)
+/**
+ * Objects created in the S3 bucket are written to the file system
+ *
+ * @param {{object?: {key: string}}} s3
+ * @returns {Promise<void>}
+ */
+async function handleS3ObjectCreated ({ object: { key } = {} }) {
+  try {
+    const filePath = join(SOURCE_DIRECTORY, key)
 
-    await writeFile(filePath, buffer)
+    await writeFile(filePath, await getS3ObjectFor(key))
   } catch (e) {
     handleError(e)
   }
@@ -215,19 +210,13 @@ async function handleS3ObjectCreated (s3) {
 /**
  * Objects removed from the S3 bucket are unlinked from the file system
  *
- * @param {{bucket?: {name: string}, object?: {key: string}}} s3
+ * @param {{object?: {key: string}}} s3
  * @returns {Promise<void>}
  */
-async function handleS3ObjectRemoved (s3 = {}) {
-  const {
-    object: {
-      key: objectKey
-    } = {}
-  } = s3
-
-  const filePath = join(SOURCE_DIRECTORY, objectKey)
-
+async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
+    const filePath = join(SOURCE_DIRECTORY, key)
+
     await unlink(filePath)
   } catch (e) {
     handleError(e)
@@ -242,17 +231,26 @@ async function handleS3ObjectRemoved (s3 = {}) {
 async function readMessageQueue () {
   const client = new SQSClient({ region: AWS_REGION })
 
+  /**
+   *  Loop
+   */
   for await (const { Messages: messages = [] } of genMessages(client, AWS_QUEUE_URL)) {
+    /**
+     *  Loop
+     */
     while (messages.length) {
       const {
-        ReceiptHandle: receiptHandle,
-        Body: string
+        Body: messageBody,
+        ReceiptHandle: receiptHandle
       } = messages.shift()
 
       const {
         Records: records = []
-      } = JSON.parse(string)
+      } = JSON.parse(messageBody)
 
+      /**
+       *  Loop
+       */
       while (records.length) {
         const {
           eventName,
@@ -298,19 +296,9 @@ async function syncSourceDirectoryWithS3 () {
         Key: key
       } = contents.shift()
 
-      const client = new S3Client({ region: AWS_REGION })
-      const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
-      const buffer = (
-        await fromBlobToBuffer(
-          await getObjectBlob(
-            await toSignedUrl(client, command)
-          )
-        )
-      )
-
       const filePath = join(SOURCE_DIRECTORY, key)
 
-      await writeFile(filePath, buffer)
+      await writeFile(filePath, await getS3ObjectFor(key))
     }
   } catch (e) {
     handleError(e)
@@ -336,15 +324,9 @@ export default async function ingest () {
   await syncSourceDirectoryWithS3()
 
   /**
-   *  We could perform the transformation process using
-   *
-   *     chokidar
-   *        .watch(SOURCE_PATTERN, { persistent: true })
-   *        .on('add', handleSourcePathChange)
-   *
-   *  but, in that case, `ingest` is able to return without resolving
-   *  any of the transformations invoked in `handleSourcePathChange`
-   *  and Express can start serving routes, which will generate a 404
+   *  We perform the transformation process now on the expectation that
+   *  we have retrieved source CSVs from S3 and there is something to
+   *  transform
    */
 
   const filePathList = await glob(SOURCE_PATTERN)
@@ -355,19 +337,31 @@ export default async function ingest () {
 
   console.log('Ingesting data complete.')
 
+  /**
+   *  Initiate the generator iterator after execution is complete
+   */
   setImmediate(async () => await readMessageQueue())
 
   /**
-   *  With all transformation now complete it should be impossible for
-   *  Express to generate a 404 provided all of source CSVs have
-   *  transformed to JSON successfully, and unless any of those source
-   *  CSVs change while the server is running:
+   *  Provided S3 had source CSVs to sync, their transformation is now
+   *  complete. It should be impossible for Express to generate a 404
+   *  on any of its routes
    *
-   *  During which time it is possible for Express to read from a
-   *  target JSON which is being written to (as it is transformed
-   *  again) and parsing will fail
+   *  However
    *
-   *  But! That's quite unlikely, I think
+   *    1) It is possible that S3 had no CSVs to sync
+   *    2) CSVs may change while Express is running
+   *
+   *  With respect to 1) we return 404 for routes until there is target
+   *  JSON
+   *
+   *  With respect to 2) it is possible for Express to try reading from
+   *  a target JSON file whle it is being written to (as the source CSV
+   *  is transformed again), in which case parsing the JSON will fail
+   *
+   *  2) seems quite unlikely while 1) is unlikely provided CI puts
+   *  CSVs into the S3 bucket. If Express has to wait on a human then it
+   *  can only return a 404 until a human has uploaded CSV files to S3
    */
 
   return (
