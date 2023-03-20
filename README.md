@@ -148,6 +148,20 @@ curl http://localhost/wur-portal?institution_id=i-33670869&year=2020&subject_id=
   -u username:password
 ```
 
+## Swagger
+
+Assuming the server is running on port `80` with Basic Auth credentials `{"username":"password"}` Swagger JSON is available at the location
+
+```
+http://localhost/api-docs/swagger.json
+```
+
+Swagger UI is available at the location
+
+```
+http://localhost/api-docs
+```
+
 ## Docker
 
 ### Building the Docker image
