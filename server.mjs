@@ -1,5 +1,11 @@
+import {
+  readFileSync
+} from 'node:fs'
+
 import express from 'express'
 import basicAuth from 'express-basic-auth'
+import YAML from 'yaml'
+import swaggerUi from 'swagger-ui-express'
 
 import {
   BASIC_AUTH_USERS,
@@ -39,6 +45,21 @@ app.use(basicAuth({
   challenge: true,
   realm: 'indonesia-api'
 }))
+
+{
+  const SWAGGER_OPTIONS = {
+    swaggerOptions: {
+      url: '/api-docs/swagger.json'
+    }
+  }
+
+  const yaml = readFileSync('./swagger.yaml', 'utf8').toString('utf8')
+  const swaggerDocument = YAML.parse(yaml)
+
+  app.get('/api-docs/swagger.json', (req, res) => res.json(swaggerDocument))
+
+  app.use('/api-docs', swaggerUi.serveFiles(null, SWAGGER_OPTIONS), swaggerUi.setup(null, SWAGGER_OPTIONS))
+}
 
 ingest()
   .then(() => {

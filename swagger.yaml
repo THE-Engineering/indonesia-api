@@ -1,0 +1,671 @@
+openapi: 3.0.0
+info:
+  description: THE datasets in JSON format
+  version: "1.0.0"
+  title: Indonesia API
+tags:
+  - name: authorised
+    description: Authorised requests
+paths:
+  /impact-overall:
+    get:
+      tags:
+        - authorised
+      summary: Gets the Impact Overall dataset
+      operationId: ImpactOverall
+      description: |
+        Gets the complete Impact Overall dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+        - in: query
+          name: year
+          description: an optional query parameter for filtering on year
+          required: false
+          schema:
+            $ref: '#/components/schemas/YearQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/ImpactOverall'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+  /wur-portal:
+    get:
+      tags:
+        - authorised
+      summary: Gets the WUR Portal dataset
+      operationId: WURPortal
+      description: |
+        Gets the complete WUR Portal dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+        - in: query
+          name: year
+          description: an optional query parameter for filtering on year
+          required: false
+          schema:
+            $ref: '#/components/schemas/YearQuery'
+        - in: query
+          name: subject_id
+          description: an optional query parameter for filtering on subject
+          required: false
+          schema:
+            $ref: '#/components/schemas/SubjectQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/WURPortal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+  /wur-citations:
+    get:
+      tags:
+        - authorised
+      summary: Gets the WUR Citations dataset
+      operationId: WURCitations
+      description: |
+        Gets the complete WUR Citations dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+        - in: query
+          name: year
+          description: an optional query parameter for filtering on year
+          required: false
+          schema:
+            $ref: '#/components/schemas/YearQuery'
+        - in: query
+          name: subject_id
+          description: an optional query parameter for filtering on subject
+          required: false
+          schema:
+            $ref: '#/components/schemas/SubjectQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/WURCitations'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+  /wur-metrics:
+    get:
+      tags:
+        - authorised
+      summary: Gets the WUR Metrics dataset
+      operationId: WURMetrics
+      description: |
+        Gets the complete WUR Metrics dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+        - in: query
+          name: year
+          description: an optional query parameter for filtering on year
+          required: false
+          schema:
+            $ref: '#/components/schemas/YearQuery'
+        - in: query
+          name: subject_id
+          description: an optional query parameter for filtering on subject
+          required: false
+          schema:
+            $ref: '#/components/schemas/SubjectQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/WURMetrics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+  /wur-id-mapping:
+    get:
+      tags:
+        - authorised
+      summary: Gets the WUR ID Mapping dataset
+      operationId: WURIDMapping
+      description: |
+        Gets the complete WUR ID Mapping dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/WURIDMapping'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+  /wur-ref-data:
+    get:
+      tags:
+        - authorised
+      summary: Gets the WUR Ref Data dataset
+      operationId: WURRefData
+      description: |
+        Gets the complete WUR Ref Data dataset, or that dataset filtered using
+        optional request query parameters
+      parameters:
+        - in: query
+          name: institution_id
+          description: an optional query parameter for filtering on institution
+          required: false
+          schema:
+            $ref: '#/components/schemas/InstitutionQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/WURRefData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    InstitutionQuery:
+      type: string
+      pattern: '^i-\d{8}$'
+    YearQuery:
+      type: integer
+      format: int32
+      minimum: 2001
+      maximum: 2023
+    SubjectQuery:
+      type: string
+    Institution:
+      type: string
+      pattern: '^i-\d{8}$'
+      example: 'i-12345678'
+    Year:
+      type: string
+      pattern: '^\d{4}'
+      example: '2001'
+    Subject:
+      type: string
+      example: 'Engineering and Technology'
+    Numeric:
+      type: string
+      pattern: '^\d+\.\d+$'
+      example: '0.0'
+    Text:
+      type: string
+    ImpactOverall:
+      type: object
+      required:
+        - id
+        - year
+        - sdg1
+        - sdg2
+        - sdg3
+        - sdg4
+        - sdg5
+        - sdg6
+        - sdg7
+        - sdg8
+        - sdg9
+        - sdg10
+        - sdg11
+        - sdg12
+        - sdg13
+        - sdg14
+        - sdg15
+        - sdg16
+        - sdg17
+        - rank_number
+        - rank_display
+        - score_number
+        - score_display
+      properties:
+        id:
+          $ref: '#/components/schemas/Institution'
+        year:
+          $ref: '#/components/schemas/Year'
+        sdg1:
+          $ref: '#/components/schemas/Numeric'
+        sdg2:
+          $ref: '#/components/schemas/Numeric'
+        sdg3:
+          $ref: '#/components/schemas/Numeric'
+        sdg4:
+          $ref: '#/components/schemas/Numeric'
+        sdg5:
+          $ref: '#/components/schemas/Numeric'
+        sdg6:
+          $ref: '#/components/schemas/Numeric'
+        sdg7:
+          $ref: '#/components/schemas/Numeric'
+        sdg8:
+          $ref: '#/components/schemas/Numeric'
+        sdg9:
+          $ref: '#/components/schemas/Numeric'
+        sdg10:
+          $ref: '#/components/schemas/Numeric'
+        sdg11:
+          $ref: '#/components/schemas/Numeric'
+        sdg12:
+          $ref: '#/components/schemas/Numeric'
+        sdg13:
+          $ref: '#/components/schemas/Numeric'
+        sdg14:
+          $ref: '#/components/schemas/Numeric'
+        sdg15:
+          $ref: '#/components/schemas/Numeric'
+        sdg16:
+          $ref: '#/components/schemas/Numeric'
+        sdg17:
+          $ref: '#/components/schemas/Numeric'
+        rank_number:
+          $ref: '#/components/schemas/Numeric'
+        rank_display:
+          $ref: '#/components/schemas/Text'
+        score_number:
+          $ref: '#/components/schemas/Numeric'
+        score_display:
+          $ref: '#/components/schemas/Text'
+    WURPortal:
+      type: object
+      required:
+        - id
+        - year
+        - subject
+        - currency_code
+        - research_income_total
+        - research_income_industry_and_commerce
+        - institutional_income_total
+        - doctorates_awarded
+        - undergraduate_degrees_awarded
+        - students_total
+        - students_international
+        - students_women
+        - students_bachelors
+        - students_masters
+        - students_doctorate
+        - research_staff_total
+        - academic_staff_total
+        - academic_staff_international
+        - academic_staff_women
+        - research_doctorates_awarded
+        - students_outbound_exchange
+      properties:
+        id:
+          $ref: '#/components/schemas/Institution'
+        year:
+          $ref: '#/components/schemas/Year'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        currency_code:
+          $ref: '#/components/schemas/Numeric'
+        research_income_total:
+          $ref: '#/components/schemas/Numeric'
+        research_income_industry_and_commerce:
+          $ref: '#/components/schemas/Numeric'
+        institutional_income_total:
+          $ref: '#/components/schemas/Numeric'
+        doctorates_awarded:
+          $ref: '#/components/schemas/Numeric'
+        undergraduate_degrees_awarded:
+          $ref: '#/components/schemas/Numeric'
+        students_total:
+          $ref: '#/components/schemas/Numeric'
+        students_international:
+          $ref: '#/components/schemas/Numeric'
+        students_women:
+          $ref: '#/components/schemas/Numeric'
+        students_bachelors:
+          $ref: '#/components/schemas/Numeric'
+        students_masters:
+          $ref: '#/components/schemas/Numeric'
+        students_doctorate:
+          $ref: '#/components/schemas/Numeric'
+        research_staff_total:
+          $ref: '#/components/schemas/Numeric'
+        academic_staff_total:
+          $ref: '#/components/schemas/Numeric'
+        academic_staff_international:
+          $ref: '#/components/schemas/Numeric'
+        academic_staff_women:
+          $ref: '#/components/schemas/Numeric'
+        research_doctorates_awarded:
+          $ref: '#/components/schemas/Numeric'
+        students_outbound_exchange:
+          $ref: '#/components/schemas/Numeric'
+    WURCitations:
+      type: object
+      required:
+        - id
+        - year
+        - subject
+        - citation_score
+        - cn_citation_score
+        - normalized_citation
+        - cn_normalized_citation
+        - total_publications
+        - international_publications
+        - fwci
+        - fwci_p75
+      properties:
+        id:
+          $ref: '#/components/schemas/Institution'
+        year:
+          $ref: '#/components/schemas/Year'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        citation_score:
+          $ref: '#/components/schemas/Numeric'
+        cn_citation_score:
+          $ref: '#/components/schemas/Numeric'
+        normalized_citation:
+          $ref: '#/components/schemas/Numeric'
+        cn_normalized_citation:
+          $ref: '#/components/schemas/Numeric'
+        total_publications:
+          $ref: '#/components/schemas/Numeric'
+        international_publications:
+          $ref: '#/components/schemas/Numeric'
+        fwci:
+          $ref: '#/components/schemas/Numeric'
+        fwci_p75:
+          $ref: '#/components/schemas/Numeric'
+    WURMetrics:
+      type: object
+      required:
+        - id
+        - wur_year
+        - subject
+        - country
+        - rank_label
+        - rank_number
+        - overall_score
+        - score_number
+        - teaching_score
+        - research_score
+        - citation_score
+        - industry_score
+        - international_score
+        - teaching_rank
+        - research_rank
+        - citation_rank
+        - industry_rank
+        - international_rank
+        - t1
+        - t2
+        - t3
+        - t4
+        - t5
+        - r1
+        - r2
+        - r3
+        - c1
+        - c2
+        - c3
+        - c4
+        - e1
+        - e2
+        - i1
+        - i2
+        - i3
+        - i4
+      properties:
+        id:
+          $ref: '#/components/schemas/Institution'
+        wur_year:
+          $ref: '#/components/schemas/Year'
+        subject:
+          $ref: '#/components/schemas/Subject'
+        country:
+          $ref: '#/components/schemas/Numeric'
+        rank_label:
+          $ref: '#/components/schemas/Text'
+        rank_number:
+          $ref: '#/components/schemas/Numeric'
+        overall_score:
+          $ref: '#/components/schemas/Text'
+        score_number:
+          $ref: '#/components/schemas/Numeric'
+        teaching_score:
+          $ref: '#/components/schemas/Numeric'
+        research_score:
+          $ref: '#/components/schemas/Numeric'
+        citation_score:
+          $ref: '#/components/schemas/Numeric'
+        industry_score:
+          $ref: '#/components/schemas/Numeric'
+        international_score:
+          $ref: '#/components/schemas/Numeric'
+        teaching_rank:
+          $ref: '#/components/schemas/Numeric'
+        research_rank:
+          $ref: '#/components/schemas/Numeric'
+        citation_rank:
+          $ref: '#/components/schemas/Numeric'
+        industry_rank:
+          $ref: '#/components/schemas/Numeric'
+        international_rank:
+          $ref: '#/components/schemas/Numeric'
+        t1:
+          $ref: '#/components/schemas/Numeric'
+        t2:
+          $ref: '#/components/schemas/Numeric'
+        t3:
+          $ref: '#/components/schemas/Numeric'
+        t4:
+          $ref: '#/components/schemas/Numeric'
+        t5:
+          $ref: '#/components/schemas/Numeric'
+        r1:
+          $ref: '#/components/schemas/Numeric'
+        r2:
+          $ref: '#/components/schemas/Numeric'
+        r3:
+          $ref: '#/components/schemas/Numeric'
+        c1:
+          $ref: '#/components/schemas/Numeric'
+        c2:
+          $ref: '#/components/schemas/Numeric'
+        c3:
+          $ref: '#/components/schemas/Numeric'
+        c4:
+          $ref: '#/components/schemas/Numeric'
+        e1:
+          $ref: '#/components/schemas/Numeric'
+        e2:
+          $ref: '#/components/schemas/Numeric'
+        i1:
+          $ref: '#/components/schemas/Numeric'
+        i2:
+          $ref: '#/components/schemas/Numeric'
+        i3:
+          $ref: '#/components/schemas/Numeric'
+        i4:
+          $ref: '#/components/schemas/Numeric'
+    WURIDMapping:
+      type: object
+      required:
+        - institution_id
+        - external_source
+        - external_id
+      properties:
+        institution_id:
+          $ref: '#/components/schemas/Institution'
+        external_source:
+          $ref: '#/components/schemas/Text'
+        external_id:
+          type: string
+          pattern: '^\d{6}'
+          example: '123456'
+    WURRefData:
+      type: object
+      required:
+        - institution_id
+        - parentid
+        - the_name
+        - chinesename
+        - foundation_year
+        - status
+        - web
+        - address
+        - longitude
+        - latitude
+        - country_code
+        - currency
+      properties:
+        institution_id:
+          $ref: '#/components/schemas/Institution'
+        parentid:
+          $ref: '#/components/schemas/Institution'
+        the_name:
+          $ref: '#/components/schemas/Text'
+        chinesename:
+          $ref: '#/components/schemas/Text'
+        foundation_year:
+          $ref: '#/components/schemas/Numeric'
+        status:
+          $ref: '#/components/schemas/Text'
+        web:
+          $ref: '#/components/schemas/Text'
+        address:
+          $ref: '#/components/schemas/Text'
+        longitude:
+          $ref: '#/components/schemas/Numeric'
+        latitude:
+          $ref: '#/components/schemas/Numeric'
+        country_code:
+          $ref: '#/components/schemas/Text'
+        currency:
+          $ref: '#/components/schemas/Text'
+    NotFound:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: number
+          const: 404
+        message:
+          type: string
+          const: 'Not Found'
+    UnprocessableContent:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: number
+          const: 422
+        message:
+          type: string
+          const: 'Unprocessable Content'
+  responses:
+    ImpactOverall:
+      description: Available results response for Impact Overall dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ImpactOverall'
+    WURPortal:
+      description: Available results response for WUR Portal dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WURPortal'
+    WURCitations:
+      description: Available results response for WUR Citations dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WURCitations'
+    WURMetrics:
+      description: Available results response for WUR Metrics dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WURMetrics'
+    WURIDMapping:
+      description: Available results response for WUR ID Mapping dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WURIDMapping'
+    WURRefData:
+      description: Available results response for WUR Ref Data dataset
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WURRefData'
+    Unauthorized:
+      description: Authorisation credentials are missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
+    NotFound:
+      description: Invalid path (dataset unavailable)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    UnprocessableContent:
+      description: Invalid query parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableContent'
+security:
+  - BasicAuth: []
