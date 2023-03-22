@@ -134,7 +134,7 @@ Accepts
 - `year`
 - `subject_id`
 
-#### `/wur-id-mapping`
+#### `/wur-id-mapping`
 
 Accepts
 
