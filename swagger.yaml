@@ -337,7 +337,7 @@ components:
         subject:
           $ref: '#/components/schemas/Subject'
         currency_code:
-          $ref: '#/components/schemas/Numeric'
+          $ref: '#/components/schemas/Text'
         research_income_total:
           $ref: '#/components/schemas/Numeric'
         research_income_industry_and_commerce:
@@ -376,8 +376,8 @@ components:
       type: object
       required:
         - id
-        - year
         - subject
+        - year
         - citation_score
         - cn_citation_score
         - normalized_citation
@@ -385,14 +385,17 @@ components:
         - total_publications
         - international_publications
         - fwci
+        - fwci_mean
         - fwci_p75
+        - fwci_top10
+        - research_influence
       properties:
         id:
           $ref: '#/components/schemas/Institution'
-        year:
-          $ref: '#/components/schemas/Year'
         subject:
           $ref: '#/components/schemas/Subject'
+        year:
+          $ref: '#/components/schemas/Year'
         citation_score:
           $ref: '#/components/schemas/Numeric'
         cn_citation_score:
@@ -407,15 +410,20 @@ components:
           $ref: '#/components/schemas/Numeric'
         fwci:
           $ref: '#/components/schemas/Numeric'
+        fwci_mean:
+          $ref: '#/components/schemas/Numeric'
         fwci_p75:
+          $ref: '#/components/schemas/Numeric'
+        fwci_top10:
+          $ref: '#/components/schemas/Numeric'
+        research_influence:
           $ref: '#/components/schemas/Numeric'
     WURMetrics:
       type: object
       required:
-        - id
         - wur_year
         - subject
-        - country
+        - id
         - rank_label
         - rank_number
         - overall_score
@@ -430,33 +438,31 @@ components:
         - citation_rank
         - industry_rank
         - international_rank
-        - t1
-        - t2
         - t3
         - t4
+        - t1
         - t5
-        - r1
-        - r2
+        - t2
         - r3
+        - r2
+        - r1
         - c1
+        - e1
+        - i2
+        - i3
+        - i1
         - c2
         - c3
         - c4
-        - e1
         - e2
-        - i1
-        - i2
-        - i3
         - i4
       properties:
-        id:
-          $ref: '#/components/schemas/Institution'
         wur_year:
           $ref: '#/components/schemas/Year'
         subject:
           $ref: '#/components/schemas/Subject'
-        country:
-          $ref: '#/components/schemas/Numeric'
+        id:
+          $ref: '#/components/schemas/Institution'
         rank_label:
           $ref: '#/components/schemas/Text'
         rank_number:
@@ -485,23 +491,31 @@ components:
           $ref: '#/components/schemas/Numeric'
         international_rank:
           $ref: '#/components/schemas/Numeric'
-        t1:
-          $ref: '#/components/schemas/Numeric'
-        t2:
-          $ref: '#/components/schemas/Numeric'
         t3:
           $ref: '#/components/schemas/Numeric'
         t4:
           $ref: '#/components/schemas/Numeric'
+        t1:
+          $ref: '#/components/schemas/Numeric'
         t5:
           $ref: '#/components/schemas/Numeric'
-        r1:
-          $ref: '#/components/schemas/Numeric'
-        r2:
+        t2:
           $ref: '#/components/schemas/Numeric'
         r3:
           $ref: '#/components/schemas/Numeric'
+        r2:
+          $ref: '#/components/schemas/Numeric'
+        r1:
+          $ref: '#/components/schemas/Numeric'
         c1:
+          $ref: '#/components/schemas/Numeric'
+        e1:
+          $ref: '#/components/schemas/Numeric'
+        i2:
+          $ref: '#/components/schemas/Numeric'
+        i3:
+          $ref: '#/components/schemas/Numeric'
+        i1:
           $ref: '#/components/schemas/Numeric'
         c2:
           $ref: '#/components/schemas/Numeric'
@@ -509,33 +523,23 @@ components:
           $ref: '#/components/schemas/Numeric'
         c4:
           $ref: '#/components/schemas/Numeric'
-        e1:
-          $ref: '#/components/schemas/Numeric'
         e2:
-          $ref: '#/components/schemas/Numeric'
-        i1:
-          $ref: '#/components/schemas/Numeric'
-        i2:
-          $ref: '#/components/schemas/Numeric'
-        i3:
           $ref: '#/components/schemas/Numeric'
         i4:
           $ref: '#/components/schemas/Numeric'
     WURIDMapping:
       type: object
       required:
-        - institution_id
         - external_source
         - external_id
+        - institution_id
       properties:
-        institution_id:
-          $ref: '#/components/schemas/Institution'
         external_source:
           $ref: '#/components/schemas/Text'
         external_id:
-          type: string
-          pattern: '^\d{6}'
-          example: '123456'
+          $ref: '#/components/schemas/Text'
+        institution_id:
+          $ref: '#/components/schemas/Institution'
     WURRefData:
       type: object
       required:
