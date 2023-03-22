@@ -89,7 +89,7 @@ You can request data from any of six routes
 - `/wur-id-mapping`
 - `/wur-ref-data`
 
-And each route accepts three query parameters in any combination
+And each route accepts up to three query parameters (which may be combined)
 
 - `institution_id`
 - `year`
@@ -102,6 +102,49 @@ A `year` is a year (between 2001 and the current year inclusive)
 A `subject_id` is a string
 
 Response data is filtered based on the request query parameter values
+
+#### `/impact-overall`
+
+Accepts
+
+- `institution_id`
+- `year`
+
+#### `/wur-portal`
+
+Accepts
+
+- `institution_id`
+- `year`
+- `subject_id`
+
+#### `/wur-citations`
+
+Accepts
+
+- `institution_id`
+- `year`
+- `subject_id`
+
+#### `/wur-metrics`
+
+Accepts
+
+- `institution_id`
+- `year`
+- `subject_id`
+
+#### `/wur-id-mapping`
+
+Accepts
+
+- `institution_id`
+
+#### `/wur-ref-data`
+
+Accepts
+
+- `institution_id`
 
 ### `curl`
 
