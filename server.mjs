@@ -23,7 +23,7 @@ import {
   WUR_ID_MAPPING_FILE_PATH,
   WUR_ID_MAPPING_KEY_MAP,
   WUR_REF_DATA_FILE_PATH,
-  WUR_REF_DATA_KEY_MAP,
+  WUR_REF_DATA_KEY_MAP
 } from './config/data.mjs'
 
 import {

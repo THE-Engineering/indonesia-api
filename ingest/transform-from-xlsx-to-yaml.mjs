@@ -353,7 +353,7 @@ function normalise (s) {
 }
 
 /**
- * Gets the data set name column index
+ * Gets the dataset name column index
  *
  * @param {Cols}
  * @returns {number}
@@ -478,7 +478,7 @@ function toProperties (properties, keyStart = 0) {
 }
 
 /**
- * Creates a filter to get the data set matching the data set name
+ * Creates a filter to get the dataset matching the dataset name
  *
  * @param {number} column
  * @param {string} name
@@ -493,8 +493,8 @@ function getIsDataSetFor (column, name) {
 }
 
 /**
- * Implements the filter to interrogate the data sets to determine whether
- * the data set matching the data set name is present
+ * Implements the filter to interrogate the datasets to determine whether
+ * the dataset matching the dataset name is present
  *
  * @param {number} column
  * @param {string} name
@@ -511,7 +511,7 @@ function hasDataSet (column, name, rows) {
 }
 
 /**
- * Implements the filter to get the data set matching the data set name
+ * Implements the filter to get the dataset matching the dataset name
  *
  * @param {number} column
  * @param {string} name
@@ -528,7 +528,7 @@ function getDataSet (column, name, rows) {
 }
 
 /**
- * Transforms the data set array to a component object
+ * Transforms the dataset array to a component object
  *
  * @param {Row}
  * @returns {Component}
@@ -541,7 +541,7 @@ function transformFromDataSetToComponent (fieldColumn, typeColumn, { [fieldColum
 }
 
 /**
- * Transforms the data sets arrays to components objects
+ * Transforms the datasets arrays to components objects
  *
  * @param {Cols} cols
  * @param {Rows} rows
@@ -558,7 +558,7 @@ function transformFromDataSetToComponents (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `Impact Overall` data set
+ * Interrogates the rows to determine whether the `Impact Overall` dataset
  * is present
  *
  * @param {Cols} cols
@@ -572,7 +572,7 @@ function hasImpactOverallDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Portal` data set
+ * Interrogates the rows to determine whether the `WUR Portal` dataset
  * is present
  *
  * @param {Cols} cols
@@ -586,7 +586,7 @@ function hasWURPortalDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Citatations` data set
+ * Interrogates the rows to determine whether the `WUR Citatations` dataset
  * is present
  *
  * @param {Cols} cols
@@ -600,7 +600,7 @@ function hasWURCitationsDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Metrics` data set
+ * Interrogates the rows to determine whether the `WUR Metrics` dataset
  * is present
  *
  * @param {Cols} cols
@@ -614,7 +614,7 @@ function hasWURMetricsDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR ID Mapping` data set
+ * Interrogates the rows to determine whether the `WUR ID Mapping` dataset
  * is present
  *
  * @param {Cols} cols
@@ -628,7 +628,7 @@ function hasWURIDMappingDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Ref Data` data set
+ * Interrogates the rows to determine whether the `WUR Ref Data` dataset
  * is present
  *
  * @param {Cols} cols
@@ -668,10 +668,14 @@ ${toProperties(transformToProperties(components, keyMap), 8)}
  * @returns {string}
  */
 function toImpactOverallComponentSchema (cols, rows) {
-  const dataSet = getDataSet(
-    getDataSetNameColumn(cols),
-    IMPACT_OVERALL_DATASET_NAME,
-    rows
+  const column = getDataSetNameColumn(cols)
+
+  const dataSet = (
+    getDataSet(
+      column,
+      IMPACT_OVERALL_DATASET_NAME,
+      rows
+    )
   )
 
   const components = (
@@ -698,9 +702,11 @@ function toImpactOverallComponentSchema (cols, rows) {
  * @returns {string}
  */
 function toWURPortalComponentSchema (cols, rows) {
+  const column = getDataSetNameColumn(cols)
+
   const dataSet = (
     getDataSet(
-      getDataSetNameColumn(cols),
+      column,
       WUR_PORTAL_DATASET_NAME,
       rows
     )
@@ -730,9 +736,11 @@ function toWURPortalComponentSchema (cols, rows) {
  * @returns {string}
  */
 function toWURCitationsComponentSchema (cols, rows) {
+  const column = getDataSetNameColumn(cols)
+
   const dataSet = (
     getDataSet(
-      getDataSetNameColumn(cols),
+      column,
       WUR_CITATIONS_DATASET_NAME,
       rows
     )
@@ -762,9 +770,11 @@ function toWURCitationsComponentSchema (cols, rows) {
  * @returns {string}
  */
 function toWURMetricsComponentSchema (cols, rows) {
+  const column = getDataSetNameColumn(cols)
+
   const dataSet = (
     getDataSet(
-      getDataSetNameColumn(cols),
+      column,
       WUR_METRICS_DATASET_NAME,
       rows
     )
@@ -794,9 +804,11 @@ function toWURMetricsComponentSchema (cols, rows) {
  * @returns {string}
  */
 function toWURIDMappingComponentSchema (cols, rows) {
+  const column = getDataSetNameColumn(cols)
+
   const dataSet = (
     getDataSet(
-      getDataSetNameColumn(cols),
+      column,
       WUR_ID_MAPPING_DATASET_NAME,
       rows
     )
@@ -826,9 +838,11 @@ function toWURIDMappingComponentSchema (cols, rows) {
  * @returns {string}
  */
 function toWURRefDataComponentSchema (cols, rows) {
+  const column = getDataSetNameColumn(cols)
+
   const dataSet = (
     getDataSet(
-      getDataSetNameColumn(cols),
+      column,
       WUR_REF_DATA_DATASET_NAME,
       rows
     )
@@ -931,7 +945,7 @@ export default function transformFromXlsxToYaml ([
   return normalise(`
 openapi: 3.0.0
 info:
-  description: THE data sets in JSON format
+  description: THE datasets in JSON format
   version: "1.0.0"
   title: Indonesia API
 tags:

@@ -6,4 +6,3 @@ export const AWS_QUEUE_URL = args.get('AWS_QUEUE_URL')
 
 export const BASIC_AUTH_USERS = args.get('BASIC_AUTH_USERS')
 export const PORT = args.get('PORT')
-
