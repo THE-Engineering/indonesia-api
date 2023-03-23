@@ -149,7 +149,7 @@ async function handleSourcePathChange (sourcePath) {
      * error as the write streams trip over each other. Overlapping change
      * events are more likely with larger files!
      */
-    if (!await isChanged(targetPath)) return
+    if (!await isChanged(sourcePath)) return
     await transformFromCsvToJson(sourcePath, targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -167,7 +167,7 @@ async function handleSourcePathRemove (sourcePath) {
 
   try {
     await ensureDir(dirname(targetPath))
-    if (!statsMap.delete(targetPath)) return
+    statsMap.delete(targetPath)
     await unlink(targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -285,8 +285,8 @@ async function getS3ObjectFor (key) {
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
     const filePath = join(SOURCE_DIRECTORY, key)
-
     await writeFile(filePath, await getS3ObjectFor(key))
+    statsMap.set(filePath, await stat(filePath))
   } catch (e) {
     handleError(e)
   }
@@ -301,7 +301,7 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
     const filePath = join(SOURCE_DIRECTORY, key)
-
+    statsMap.delete(filePath)
     await unlink(filePath)
   } catch (e) {
     handleError(e)
