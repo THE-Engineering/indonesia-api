@@ -1,16 +1,7 @@
-import {
-  SQSClient,
-  DeleteMessageCommand,
-  ReceiveMessageCommand
-} from '@aws-sdk/client-sqs'
-import {
-  S3Client,
-  ListObjectsCommand,
-  GetObjectCommand
-} from '@aws-sdk/client-s3'
-import {
-  getSignedUrl
-} from '@aws-sdk/s3-request-presigner'
+/**
+ * @typedef {import('fs').Stats} Stats
+ * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
+ */
 
 import {
   dirname,
@@ -20,8 +11,29 @@ import {
 
 import {
   unlink,
-  writeFile
+  writeFile,
+  stat
 } from 'node:fs/promises'
+
+import {
+  isDeepStrictEqual
+} from 'node:util'
+
+import {
+  SQSClient,
+  DeleteMessageCommand,
+  ReceiveMessageCommand
+} from '@aws-sdk/client-sqs'
+
+import {
+  S3Client,
+  ListObjectsCommand,
+  GetObjectCommand
+} from '@aws-sdk/client-s3'
+
+import {
+  getSignedUrl
+} from '@aws-sdk/s3-request-presigner'
 
 import glob from 'glob'
 
@@ -58,8 +70,62 @@ const AWS_BUCKET_NAME = args.get('AWS_BUCKET_NAME')
 
 const AWS_QUEUE_URL = args.get('AWS_QUEUE_URL')
 
+const statsMap = new Map()
+
 /**
- * When the source file is change the target file is changed
+ * Interrogates the message to determine whether it has
+ * a `Messages` array
+ *
+ * @param {ReceiveMessageCommandOutput} message
+ * @returns {boolean}
+ */
+function hasMessages (message) {
+  if (Reflect.has(message, 'Messages')) {
+    return Boolean(Reflect.get(message, 'Messages'))
+  }
+
+  return false
+}
+
+/**
+ * Get the file system stats or null for the target JSON file
+ *
+ * @param {string} targetPath - a JSON file
+ * @returns {Promise<Stats|null>}
+ */
+async function statsFor (targetPath) {
+  try {
+    return await stat(targetPath)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Interrogate the file path and compare its current stats with
+ * its previous stats
+ *
+ * @param {string} filePath
+ * @returns {Promise<boolean>}
+ */
+async function isChanged (filePath) {
+  const now = await statsFor(filePath)
+
+  if (now) {
+    if (statsMap.has(filePath)) {
+      const was = statsMap.get(filePath)
+
+      if (isDeepStrictEqual(was, now)) return false
+    }
+
+    statsMap.set(filePath, now)
+  }
+
+  return true
+}
+
+/**
+ * When the source file is changed the target file is changed
  *
  * @param {string} sourcePath - a CSV file
  * @returns {Promise<void>}
@@ -69,6 +135,21 @@ async function handleSourcePathChange (sourcePath) {
 
   try {
     await ensureDir(dirname(targetPath))
+    /**
+     * This file system event filtering ensures we don't try to transform
+     * from CSV to JSON while an earlier transformation of the same file data
+     * is in progress
+     *
+     * We cache the stats for each file at `add` or `change` to decide whether
+     * the current stats are different from the previous stats before beginning
+     * another transformation
+     *
+     * It is possible (though unlikely) for change events to overlap where the
+     * stats are not different. Simultaneous transformations will cause a fatal
+     * error as the write streams trip over each other. Overlapping change
+     * events are more likely with larger files!
+     */
+    if (!await isChanged(targetPath)) return
     await transformFromCsvToJson(sourcePath, targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -86,6 +167,7 @@ async function handleSourcePathRemove (sourcePath) {
 
   try {
     await ensureDir(dirname(targetPath))
+    if (!statsMap.delete(targetPath)) return
     await unlink(targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -111,12 +193,15 @@ async function * genMessages (client, queueUrl) {
   while (true) {
     const command = new ReceiveMessageCommand({
       QueueUrl: queueUrl,
-      WaitTimeSeconds: waitTimeSeconds
+      WaitTimeSeconds: waitTimeSeconds,
+      MaxNumberOfMessages: 1,
+      MessageAttributeNames: [
+        'All'
+      ]
     })
 
     const message = await client.send(command)
-
-    if (Reflect.has(message, 'Messages')) {
+    if (hasMessages(message)) {
       /**
        *  A message has been received from the queue
        *  so ensure short polling, and yield
@@ -366,7 +451,15 @@ export default async function ingest () {
 
   return (
     chokidar
-      .watch(SOURCE_PATTERN, { persistent: true })
+      /**
+       *  Use `ignoreInitial` so as not to raise `add` events for CSVs we
+       *  have just synced when Chokidar initialises
+       */
+      .watch(SOURCE_PATTERN, { persistent: true, ignoreInitial: true })
+      /**
+       *  But handle `add` events to sync CSVs uploaded into S3 while the
+       *  application is running
+       */
       .on('add', handleSourcePathChange)
       .on('change', handleSourcePathChange)
       .on('unlink', handleSourcePathRemove)

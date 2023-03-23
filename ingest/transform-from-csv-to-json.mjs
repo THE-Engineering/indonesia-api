@@ -19,6 +19,16 @@ import toJsonFilePath from '#utils/to-json-file-path'
 import handleFilePathError from '#utils/handle-file-path-error'
 
 /**
+ * Parse the JSON string (but only take one argument from `map`)
+ *
+ * @param {string} string - From the array
+ * @returns {Object.<string, (string|number|boolean)>} - An object
+ */
+function fromJson (string) {
+  return JSON.parse(string)
+}
+
+/**
  * Split on end-of-line characters and remove zero-length lines
  *
  * @param {string} string - From the file data buffer
@@ -38,7 +48,7 @@ function toArray (string) {
  */
 function transformFileData (buffer) {
   return (
-    Buffer.from(JSON.stringify(toArray(buffer.toString()).map(JSON.parse)))
+    Buffer.from(JSON.stringify(toArray(buffer.toString()).map(fromJson)))
   )
 }
 
