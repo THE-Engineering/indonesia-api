@@ -1,8 +1,8 @@
-import args from './args.mjs'
-
 import {
   resolve
 } from 'node:path'
+
+import args from './args.mjs'
 
 export const XLSX_DIRECTORY = args.get('XLSX_DIRECTORY')
 
