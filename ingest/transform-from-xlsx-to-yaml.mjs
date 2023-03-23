@@ -1,4 +1,16 @@
 /**
+ * Params
+ *
+ * @typedef {Object} Params
+ * @property {boolean} hasImpactOverall
+ * @property {boolean} hasWURPortal
+ * @property {boolean} hasWURCitations
+ * @property {boolean} hasWURMetrics
+ * @property {boolean} hasWURIDMapping
+ * @property {boolean} hasWURRefData
+ */
+
+/**
  * Cols
  *
  * @typedef {Object} Cols
@@ -867,54 +879,74 @@ function toWURRefDataComponentSchema (cols, rows) {
 /**
  * Generates the Swagger YAML `paths`
  *
- * @param {Cols} cols
- * @param {Rows} rows
+ * @param {Params}
  * @returns {string}
  */
-function getPaths (cols, rows) {
+function getPaths ({
+  hasImpactOverall,
+  hasWURPortal,
+  hasWURCitations,
+  hasWURMetrics,
+  hasWURIDMapping,
+  hasWURRefData
+}) {
   return [
-    (hasImpactOverallDataSet(cols, rows) && normalise(IMPACT_OVERALL_PATH)),
-    (hasWURPortalDataSet(cols, rows) && normalise(WUR_PORTAL_PATH)),
-    (hasWURCitationsDataSet(cols, rows) && normalise(WUR_CITATIONS_PATH)),
-    (hasWURMetricsDataSet(cols, rows) && normalise(WUR_METRICS_PATH)),
-    (hasWURIDMappingDataSet(cols, rows) && normalise(WUR_ID_MAPPING_PATH)),
-    (hasWURRefDataDataSet(cols, rows) && normalise(WUR_REF_DATA_PATH))
+    (hasImpactOverall && normalise(IMPACT_OVERALL_PATH)),
+    (hasWURPortal && normalise(WUR_PORTAL_PATH)),
+    (hasWURCitations && normalise(WUR_CITATIONS_PATH)),
+    (hasWURMetrics && normalise(WUR_METRICS_PATH)),
+    (hasWURIDMapping && normalise(WUR_ID_MAPPING_PATH)),
+    (hasWURRefData && normalise(WUR_REF_DATA_PATH))
   ].filter(Boolean).join(String.fromCharCode(10))
 }
 
 /**
  * Generates the Swagger YAML `components/schemas`
  *
+ * @param {Params}
  * @param {Cols} cols
  * @param {Rows} rows
  * @returns {string}
  */
-function getComponentsSchemas (cols, rows) {
+function getComponentsSchemas ({
+  hasImpactOverall,
+  hasWURPortal,
+  hasWURCitations,
+  hasWURMetrics,
+  hasWURIDMapping,
+  hasWURRefData
+}, cols, rows) {
   return [
-    (hasImpactOverallDataSet(cols, rows) && normalise(toImpactOverallComponentSchema(cols, rows))),
-    (hasWURPortalDataSet(cols, rows) && normalise(toWURPortalComponentSchema(cols, rows))),
-    (hasWURCitationsDataSet(cols, rows) && normalise(toWURCitationsComponentSchema(cols, rows))),
-    (hasWURMetricsDataSet(cols, rows) && normalise(toWURMetricsComponentSchema(cols, rows))),
-    (hasWURIDMappingDataSet(cols, rows) && normalise(toWURIDMappingComponentSchema(cols, rows))),
-    (hasWURRefDataDataSet(cols, rows) && normalise(toWURRefDataComponentSchema(cols, rows)))
+    (hasImpactOverall && normalise(toImpactOverallComponentSchema(cols, rows))),
+    (hasWURPortal && normalise(toWURPortalComponentSchema(cols, rows))),
+    (hasWURCitations && normalise(toWURCitationsComponentSchema(cols, rows))),
+    (hasWURMetrics && normalise(toWURMetricsComponentSchema(cols, rows))),
+    (hasWURIDMapping && normalise(toWURIDMappingComponentSchema(cols, rows))),
+    (hasWURRefData && normalise(toWURRefDataComponentSchema(cols, rows)))
   ].filter(Boolean).join(String.fromCharCode(10))
 }
 
 /**
  * Generates the Swagger YAML `responses`
  *
- * @param {Cols} cols
- * @param {Rows} rows
+ * @param {Params}
  * @returns {string}
  */
-function getResponses (cols, rows) {
+function getResponses ({
+  hasImpactOverall,
+  hasWURPortal,
+  hasWURCitations,
+  hasWURMetrics,
+  hasWURIDMapping,
+  hasWURRefData
+}) {
   return [
-    (hasImpactOverallDataSet(cols, rows) && normalise(IMPACT_OVERALL_RESPONSE)),
-    (hasWURPortalDataSet(cols, rows) && normalise(WUR_PORTAL_RESPONSE)),
-    (hasWURCitationsDataSet(cols, rows) && normalise(WUR_CITATIONS_RESPONSE)),
-    (hasWURMetricsDataSet(cols, rows) && normalise(WUR_METRICS_RESPONSE)),
-    (hasWURIDMappingDataSet(cols, rows) && normalise(WUR_ID_MAPPING_RESPONSE)),
-    (hasWURRefDataDataSet(cols, rows) && normalise(WUR_REF_DATA_RESPONSE))
+    (hasImpactOverall && normalise(IMPACT_OVERALL_RESPONSE)),
+    (hasWURPortal && normalise(WUR_PORTAL_RESPONSE)),
+    (hasWURCitations && normalise(WUR_CITATIONS_RESPONSE)),
+    (hasWURMetrics && normalise(WUR_METRICS_RESPONSE)),
+    (hasWURIDMapping && normalise(WUR_ID_MAPPING_RESPONSE)),
+    (hasWURRefData && normalise(WUR_REF_DATA_RESPONSE))
   ].filter(Boolean).join(String.fromCharCode(10))
 }
 
@@ -942,6 +974,15 @@ export default function transformFromXlsxToYaml ([
     typeColumn
   }
 
+  const params = {
+    hasImpactOverall: hasImpactOverallDataSet(cols, rows),
+    hasWURPortal: hasWURPortalDataSet(cols, rows),
+    hasWURCitations: hasWURCitationsDataSet(cols, rows),
+    hasWURMetrics: hasWURMetricsDataSet(cols, rows),
+    hasWURIDMapping: hasWURIDMappingDataSet(cols, rows),
+    hasWURRefData: hasWURRefDataDataSet(cols, rows)
+  }
+
   return normalise(`
 openapi: 3.0.0
 info:
@@ -952,7 +993,7 @@ tags:
   - name: authorised
     description: Authorised requests
 paths:
-${getPaths(cols, rows)}
+${getPaths(params)}
 components:
   securitySchemes:
     BasicAuth:
@@ -986,7 +1027,7 @@ components:
       example: '0.0'
     Text:
       type: string
-${getComponentsSchemas(cols, rows)}
+${getComponentsSchemas(params, cols, rows)}
     NotFound:
       type: object
       required:
@@ -1012,7 +1053,7 @@ ${getComponentsSchemas(cols, rows)}
           type: string
           const: 'Unprocessable Content'
   responses:
-${getResponses(cols, rows)}
+${getResponses(params)}
     Unauthorized:
       description: Authorisation credentials are missing or invalid
       headers:
