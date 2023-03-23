@@ -1,14 +1,17 @@
 import {
-  readFileSync
-} from 'node:fs'
+  access,
+  constants
+} from 'node:fs/promises'
 
 import express from 'express'
 import basicAuth from 'express-basic-auth'
-import YAML from 'yaml'
 import swaggerUi from 'swagger-ui-express'
 
 import {
-  BASIC_AUTH_USERS,
+  SWAGGER_JSON_FILE_PATH
+} from './config/data-model.mjs'
+
+import {
   IMPACT_OVERALL_FILE_PATH,
   IMPACT_OVERALL_KEY_MAP,
   WUR_PORTAL_FILE_PATH,
@@ -21,10 +24,15 @@ import {
   WUR_ID_MAPPING_KEY_MAP,
   WUR_REF_DATA_FILE_PATH,
   WUR_REF_DATA_KEY_MAP,
-  PORT
-} from '#config'
+} from './config/data.mjs'
 
-import ingest from '#ingest'
+import {
+  BASIC_AUTH_USERS,
+  PORT
+} from './config/index.mjs'
+
+import ingestDataModel from './ingest/data-model.mjs'
+import ingestData from './ingest/data.mjs'
 
 import IMPACT_OVERALL_SCHEMA from './server/schemas/impact-overall-schema.mjs'
 import WUR_PORTAL_SCHEMA from './server/schemas/wur-portal-schema.mjs'
@@ -53,23 +61,28 @@ app.use(basicAuth({
   realm: 'indonesia-api'
 }))
 
-{
-  const SWAGGER_OPTIONS = {
-    swaggerOptions: {
-      url: '/api-docs/swagger.json'
-    }
-  }
-
-  const yaml = readFileSync('./swagger.yaml', 'utf8').toString('utf8')
-  const swaggerDocument = YAML.parse(yaml)
-
-  app.get('/api-docs/swagger.json', (req, res) => res.json(swaggerDocument))
-
-  app.use('/api-docs', swaggerUi.serveFiles(null, SWAGGER_OPTIONS), swaggerUi.setup(null, SWAGGER_OPTIONS))
-}
-
-ingest()
+ingestDataModel()
+  .then(ingestData)
   .then(() => {
+    {
+      const SWAGGER_OPTIONS = {
+        swaggerOptions: {
+          url: '/api-docs/swagger.json'
+        }
+      }
+
+      app.get('/api-docs/swagger.json', async (req, res) => {
+        try {
+          await access(SWAGGER_JSON_FILE_PATH, constants.R_OK)
+          res.sendFile(SWAGGER_JSON_FILE_PATH)
+        } catch {
+          res.status(404).json(NOT_FOUND)
+        }
+      })
+
+      app.use('/api-docs', swaggerUi.serveFiles(null, SWAGGER_OPTIONS), swaggerUi.setup(null, SWAGGER_OPTIONS))
+    }
+
     app.get('/impact-overall',
       getSchemaMiddleware(IMPACT_OVERALL_SCHEMA),
       getHasFilePathMiddleware(IMPACT_OVERALL_FILE_PATH),

@@ -13,7 +13,7 @@ import csv from 'csvtojson'
 
 import {
   SOURCE_DIRECTORY
-} from '#config'
+} from '#config/data'
 
 import toJsonFilePath from '#utils/to-json-file-path'
 import handleFilePathError from '#utils/handle-file-path-error'

@@ -18,8 +18,15 @@
 # JSON
 .target
 
+# XLSX
+.xlsx
+
 # Vars
 .env
 
 # PSD
 /docs/**/**.psd
+
+# Swagger
+/swagger.json
+/swagger.yaml

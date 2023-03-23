@@ -1,9 +1,11 @@
 /**
  * @typedef {import('fs').Stats} Stats
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
+ * @typedef {import('../utils/gen-s3.mjs').S3} S3
  */
 
 import {
+  extname,
   dirname,
   join,
   resolve
@@ -21,19 +23,13 @@ import {
 
 import {
   SQSClient,
-  DeleteMessageCommand,
-  ReceiveMessageCommand
+  DeleteMessageCommand
 } from '@aws-sdk/client-sqs'
 
 import {
   S3Client,
-  ListObjectsCommand,
-  GetObjectCommand
+  ListObjectsCommand
 } from '@aws-sdk/client-s3'
-
-import {
-  getSignedUrl
-} from '@aws-sdk/s3-request-presigner'
 
 import glob from 'glob'
 
@@ -50,10 +46,19 @@ import {
 import {
   SOURCE_DIRECTORY,
   TARGET_DIRECTORY
+} from '#config/data'
+
+import {
+  AWS_REGION,
+  AWS_BUCKET_NAME,
+  AWS_QUEUE_URL
 } from '#config'
 
-import args from '#config/args'
-
+import genSQSMessage from '#utils/gen-sqs-message'
+import genS3 from '#utils/gen-s3'
+import {
+  getS3ObjectFor
+} from '#utils/client-s3'
 import toJsonFilePath from '#utils/to-json-file-path'
 import handleFilePathError from '#utils/handle-file-path-error'
 import handleError from '#utils/handle-error'
@@ -64,28 +69,7 @@ const SOURCE_PATTERN = resolve(join(SOURCE_DIRECTORY, '*.csv'))
 
 const TARGET_PATTERN = resolve(join(TARGET_DIRECTORY, '*.json'))
 
-const AWS_REGION = args.get('AWS_REGION')
-
-const AWS_BUCKET_NAME = args.get('AWS_BUCKET_NAME')
-
-const AWS_QUEUE_URL = args.get('AWS_QUEUE_URL')
-
 const statsMap = new Map()
-
-/**
- * Interrogates the message to determine whether it has
- * a `Messages` array
- *
- * @param {ReceiveMessageCommandOutput} message
- * @returns {boolean}
- */
-function hasMessages (message) {
-  if (Reflect.has(message, 'Messages')) {
-    return Boolean(Reflect.get(message, 'Messages'))
-  }
-
-  return false
-}
 
 /**
  * Get the file system stats or null for the target JSON file
@@ -130,7 +114,7 @@ async function isChanged (filePath) {
  * @param {string} sourcePath - a CSV file
  * @returns {Promise<void>}
  */
-async function handleSourcePathChange (sourcePath) {
+async function handleDataFilePathChange (sourcePath) {
   const targetPath = toJsonFilePath(sourcePath, TARGET_DIRECTORY)
 
   try {
@@ -162,12 +146,12 @@ async function handleSourcePathChange (sourcePath) {
  * @param {string} sourcePath - a CSV file
  * @returns {Promise<void>}
  */
-async function handleSourcePathRemove (sourcePath) {
+async function handleDataFilePathRemove (sourcePath) {
   const targetPath = toJsonFilePath(sourcePath, TARGET_DIRECTORY)
 
   try {
     await ensureDir(dirname(targetPath))
-    statsMap.delete(targetPath)
+    statsMap.delete(sourcePath)
     await unlink(targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -175,111 +159,9 @@ async function handleSourcePathRemove (sourcePath) {
 }
 
 /**
- * Generator to read from the SQS queue
+ * Objects created in S3 are written to the file system
  *
- * @generator
- * @param {S3Client} client
- * @param {string} queueUrl
- * @yields {ReceiveMessageCommandOutput}
- */
-async function * genMessages (client, queueUrl) {
-  /**
-   *  Switch between long polling and short polling
-   *  depending on whether a message has been
-   *  received from the queue
-   */
-  let waitTimeSeconds = 20
-
-  while (true) {
-    const command = new ReceiveMessageCommand({
-      QueueUrl: queueUrl,
-      WaitTimeSeconds: waitTimeSeconds,
-      MaxNumberOfMessages: 1,
-      MessageAttributeNames: [
-        'All'
-      ]
-    })
-
-    const message = await client.send(command)
-    if (hasMessages(message)) {
-      /**
-       *  A message has been received from the queue
-       *  so ensure short polling, and yield
-       */
-      waitTimeSeconds = 0
-
-      yield message
-    } else {
-      /**
-       *  A message has not been received from the queue
-       *  so ensure long polling
-       */
-      waitTimeSeconds = 20
-    }
-  }
-}
-
-/**
- * Gets the S3 signed url with the client for the command
- *
- * @param {S3Client} client
- * @param {GetObjectCommand} command
- * @returns {Promise<string>}
- */
-async function toSignedUrl (client, command) {
-  return (
-    await getSignedUrl(client, command, { expiresIn: 3600 })
-  )
-}
-
-/**
- * Fetches the URL and resolves to a Blob
- *
- * @param {string} url - The S3 signed url
- * @returns {Promise<Blob>}
- */
-async function getBlobFromUrl (url) {
-  const response = await fetch(url)
-
-  return (
-    await response.blob()
-  )
-}
-
-/**
- * Transforms a Blob to a Buffer
- *
- * @param {Blob} blob
- * @returns {Promise<Buffer>}
- */
-async function fromBlobToBuffer (blob) {
-  const arrayBuffer = await blob.arrayBuffer()
-
-  return Buffer.from(arrayBuffer)
-}
-
-/**
- *  Gets the bucket object from S3 and resolves it to a Buffer
- *
- * @param {string} key
- * @returns {Promise<Buffer>}
- */
-async function getS3ObjectFor (key) {
-  const client = new S3Client({ region: AWS_REGION })
-  const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
-  return (
-    await fromBlobToBuffer(
-      await getBlobFromUrl(
-        await toSignedUrl(client, command)
-      )
-    )
-  )
-}
-
-/**
- * Objects created in the S3 bucket are written to the file system
- *
- * @param {{object?: {key: string}}} s3
+ * @param {S3} s3
  * @returns {Promise<void>}
  */
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
@@ -293,9 +175,9 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
 }
 
 /**
- * Objects removed from the S3 bucket are unlinked from the file system
+ * Objects removed from S3 are unlinked from the file system
  *
- * @param {{object?: {key: string}}} s3
+ * @param {S3} s3
  * @returns {Promise<void>}
  */
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
@@ -316,58 +198,54 @@ async function handleS3ObjectRemoved ({ object: { key } = {} }) {
 async function readMessageQueue () {
   const client = new SQSClient({ region: AWS_REGION })
 
-  /**
-   *  Loop
-   */
-  for await (const { Messages: messages = [] } of genMessages(client, AWS_QUEUE_URL)) {
-    /**
-     *  Loop
-     */
+  for await (const { Messages: messages = [] } of genSQSMessage(client, AWS_QUEUE_URL)) {
+    let isMessageHandled = false
+
     while (messages.length) {
-      const {
-        Body: messageBody,
-        ReceiptHandle: receiptHandle
-      } = messages.shift()
+      const message = messages.shift()
 
-      const {
-        Records: records = []
-      } = JSON.parse(messageBody)
-
-      /**
-       *  Loop
-       */
-      while (records.length) {
+      for (const s3 of genS3(message)) {
         const {
-          eventName,
-          s3 = {}
-        } = records.shift()
+          configurationId = ''
+        } = s3
 
-        if (eventName.startsWith('ObjectCreated')) await handleS3ObjectCreated(s3)
-        else {
-          if (eventName.startsWith('ObjectRemoved')) await handleS3ObjectRemoved(s3)
+        if (configurationId.startsWith('CSVCreated')) {
+          await handleS3ObjectCreated(s3)
+          isMessageHandled = true
+        } else {
+          if (configurationId.startsWith('CSVRemoved')) {
+            await handleS3ObjectRemoved(s3)
+            isMessageHandled = true
+          }
         }
       }
 
-      try {
-        const command = new DeleteMessageCommand({
-          QueueUrl: AWS_QUEUE_URL,
+      if (isMessageHandled) {
+        const {
           ReceiptHandle: receiptHandle
-        })
+        } = message
 
-        await client.send(command)
-      } catch (e) {
-        handleError(e)
+        try {
+          const command = new DeleteMessageCommand({
+            QueueUrl: AWS_QUEUE_URL,
+            ReceiptHandle: receiptHandle
+          })
+
+          await client.send(command)
+        } catch (e) {
+          handleError(e)
+        }
       }
     }
   }
 }
 
 /**
- * Syncronises the S3 bucket with the file system
+ * Syncronises S3 with the file system
  *
  * @returns {Promise<void>}
  */
-async function syncSourceDirectoryWithS3 () {
+async function syncDataWithS3 () {
   try {
     const client = new S3Client({ region: AWS_REGION })
     const command = new ListObjectsCommand({ Bucket: AWS_BUCKET_NAME })
@@ -381,9 +259,11 @@ async function syncSourceDirectoryWithS3 () {
         Key: key
       } = contents.shift()
 
-      const filePath = join(SOURCE_DIRECTORY, key)
-
-      await writeFile(filePath, await getS3ObjectFor(key))
+      if (extname(key) === '.csv') {
+        const filePath = join(SOURCE_DIRECTORY, key)
+        await writeFile(filePath, await getS3ObjectFor(key))
+        statsMap.set(filePath, await stat(filePath))
+      }
     }
   } catch (e) {
     handleError(e)
@@ -397,7 +277,7 @@ async function syncSourceDirectoryWithS3 () {
  *
  * @returns {Promise<chokidar.FSWatcher>}
  */
-export default async function ingest () {
+export default async function ingestData () {
   await ensureDir(SOURCE_DIRECTORY)
   await ensureDir(TARGET_DIRECTORY)
 
@@ -406,7 +286,7 @@ export default async function ingest () {
 
   console.log('Ingesting data ...')
 
-  await syncSourceDirectoryWithS3()
+  await syncDataWithS3()
 
   /**
    *  We perform the transformation process now on the expectation that
@@ -417,7 +297,7 @@ export default async function ingest () {
   const filePathList = await glob(SOURCE_PATTERN)
   while (filePathList.length) {
     const filePath = filePathList.shift()
-    await handleSourcePathChange(filePath)
+    await handleDataFilePathChange(filePath)
   }
 
   console.log('Ingesting data complete.')
@@ -445,7 +325,7 @@ export default async function ingest () {
    *  is transformed again), in which case parsing the JSON will fail
    *
    *  2) seems quite unlikely while 1) is unlikely provided CI puts
-   *  CSVs into the S3 bucket. If Express has to wait on a human then it
+   *  CSVs into S3. If Express has to wait on a human then it
    *  can only return a 404 until a human has uploaded CSV files to S3
    */
 
@@ -460,9 +340,9 @@ export default async function ingest () {
        *  But handle `add` events to sync CSVs uploaded into S3 while the
        *  application is running
        */
-      .on('add', handleSourcePathChange)
-      .on('change', handleSourcePathChange)
-      .on('unlink', handleSourcePathRemove)
+      .on('add', handleDataFilePathChange)
+      .on('change', handleDataFilePathChange)
+      .on('unlink', handleDataFilePathRemove)
       .on('error', handleFilePathError)
   )
 }
