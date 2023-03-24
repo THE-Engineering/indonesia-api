@@ -51,6 +51,8 @@
  * @typedef {Object.<string, string>} KeyMap
  */
 
+import XLSX from 'node-xlsx'
+
 import {
   IMPACT_OVERALL_KEY_MAP,
   WUR_PORTAL_KEY_MAP,
@@ -91,13 +93,13 @@ const IMPACT_OVERALL_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
         - in: query
           name: year
-          description: an optional query parameter for filtering on year
+          description: An optional query parameter for filtering on year
           required: false
           schema:
             $ref: '#/components/schemas/YearQuery'
@@ -125,19 +127,19 @@ const WUR_PORTAL_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
         - in: query
           name: year
-          description: an optional query parameter for filtering on year
+          description: An optional query parameter for filtering on year
           required: false
           schema:
             $ref: '#/components/schemas/YearQuery'
         - in: query
           name: subject_id
-          description: an optional query parameter for filtering on subject
+          description: An optional query parameter for filtering on subject
           required: false
           schema:
             $ref: '#/components/schemas/SubjectQuery'
@@ -165,19 +167,19 @@ const WUR_CITATIONS_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
         - in: query
           name: year
-          description: an optional query parameter for filtering on year
+          description: An optional query parameter for filtering on year
           required: false
           schema:
             $ref: '#/components/schemas/YearQuery'
         - in: query
           name: subject_id
-          description: an optional query parameter for filtering on subject
+          description: An optional query parameter for filtering on subject
           required: false
           schema:
             $ref: '#/components/schemas/SubjectQuery'
@@ -205,19 +207,19 @@ const WUR_METRICS_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
         - in: query
           name: year
-          description: an optional query parameter for filtering on year
+          description: An optional query parameter for filtering on year
           required: false
           schema:
             $ref: '#/components/schemas/YearQuery'
         - in: query
           name: subject_id
-          description: an optional query parameter for filtering on subject
+          description: An optional query parameter for filtering on subject
           required: false
           schema:
             $ref: '#/components/schemas/SubjectQuery'
@@ -245,7 +247,7 @@ const WUR_ID_MAPPING_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
@@ -273,7 +275,7 @@ const WUR_REF_DATA_PATH = `
       parameters:
         - in: query
           name: institution_id
-          description: an optional query parameter for filtering on institution
+          description: An optional query parameter for filtering on institution
           required: false
           schema:
             $ref: '#/components/schemas/InstitutionQuery'
@@ -953,17 +955,19 @@ function getResponses ({
 /**
  * Transform from XLSX to YAML
  *
- * @param {{name: string, data: unknown[]}[]}
+ * @param {Buffer|string} xlsx
  * @returns {string}
  */
-export default function transformFromXlsxToYaml ([
-  {
-    data: [
-      head,
-      ...rows
-    ]
-  }
-]) {
+export default function transformFromXlsxToYaml (xlsx) {
+  const [
+    {
+      data: [
+        head,
+        ...rows
+      ]
+    }
+  ] = XLSX.parse(xlsx)
+
   const dataSetNameColumn = head.findIndex((item) => item.toLowerCase() === 'dataset name')
   const fieldColumn = head.findIndex((item) => item.toLowerCase() === 'field')
   const typeColumn = head.findIndex((item) => item.toLowerCase() === 'type')

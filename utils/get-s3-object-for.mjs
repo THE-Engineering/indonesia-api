@@ -57,7 +57,7 @@ export async function fromBlobToBuffer (blob) {
  * @param {string} key
  * @returns {Promise<Buffer>}
  */
-export async function getS3ObjectFor (key) {
+export default async function getS3ObjectFor (key) {
   const client = new S3Client({ region: AWS_REGION })
   const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
 

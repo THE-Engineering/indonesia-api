@@ -1,6 +1,7 @@
 /**
  * @typedef {import('fs').Stats} Stats
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
+ * @typedef {import('@aws-sdk/client-sqs').Message} Message
  * @typedef {import('../utils/gen-s3.mjs').S3} S3
  */
 
@@ -13,18 +14,10 @@ import {
 
 import {
   unlink,
-  writeFile,
-  stat
+  writeFile
 } from 'node:fs/promises'
 
-import {
-  isDeepStrictEqual
-} from 'node:util'
-
-import {
-  SQSClient,
-  DeleteMessageCommand
-} from '@aws-sdk/client-sqs'
+import PubSub from 'pubsub-js'
 
 import {
   S3Client,
@@ -50,63 +43,24 @@ import {
 
 import {
   AWS_REGION,
-  AWS_BUCKET_NAME,
-  AWS_QUEUE_URL
+  AWS_BUCKET_NAME
 } from '#config'
 
-import genSQSMessage from '#utils/gen-sqs-message'
 import genS3 from '#utils/gen-s3'
-import {
-  getS3ObjectFor
-} from '#utils/client-s3'
+import getS3ObjectFor from '#utils/get-s3-object-for'
 import toJsonFilePath from '#utils/to-json-file-path'
 import handleFilePathError from '#utils/handle-file-path-error'
 import handleError from '#utils/handle-error'
+
+import {
+  sendSQSDeleteMessageCommand
+} from './from-queue.mjs'
 
 import transformFromCsvToJson from './transform-from-csv-to-json.mjs'
 
 const SOURCE_PATTERN = resolve(join(SOURCE_DIRECTORY, '*.csv'))
 
 const TARGET_PATTERN = resolve(join(TARGET_DIRECTORY, '*.json'))
-
-const statsMap = new Map()
-
-/**
- * Get the file system stats or null for the target JSON file
- *
- * @param {string} targetPath - a JSON file
- * @returns {Promise<Stats|null>}
- */
-async function statsFor (targetPath) {
-  try {
-    return await stat(targetPath)
-  } catch {
-    return null
-  }
-}
-
-/**
- * Interrogate the file path and compare its current stats with
- * its previous stats
- *
- * @param {string} filePath
- * @returns {Promise<boolean>}
- */
-async function isChanged (filePath) {
-  const now = await statsFor(filePath)
-
-  if (now) {
-    if (statsMap.has(filePath)) {
-      const was = statsMap.get(filePath)
-
-      if (isDeepStrictEqual(was, now)) return false
-    }
-
-    statsMap.set(filePath, now)
-  }
-
-  return true
-}
 
 /**
  * When the source file is changed the target file is changed
@@ -119,21 +73,6 @@ async function handleDataFilePathChange (sourcePath) {
 
   try {
     await ensureDir(dirname(targetPath))
-    /**
-     * This file system event filtering ensures we don't try to transform
-     * from CSV to JSON while an earlier transformation of the same file data
-     * is in progress
-     *
-     * We cache the stats for each file at `add` or `change` to decide whether
-     * the current stats are different from the previous stats before beginning
-     * another transformation
-     *
-     * It is possible (though unlikely) for change events to overlap where the
-     * stats are not different. Simultaneous transformations will cause a fatal
-     * error as the write streams trip over each other. Overlapping change
-     * events are more likely with larger files!
-     */
-    if (!await isChanged(sourcePath)) return
     await transformFromCsvToJson(sourcePath, targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -151,7 +90,6 @@ async function handleDataFilePathRemove (sourcePath) {
 
   try {
     await ensureDir(dirname(targetPath))
-    statsMap.delete(sourcePath)
     await unlink(targetPath)
   } catch (e) {
     handleFilePathError(e)
@@ -161,14 +99,13 @@ async function handleDataFilePathRemove (sourcePath) {
 /**
  * Objects created in S3 are written to the file system
  *
- * @param {S3} s3
+ * @param {S3}
  * @returns {Promise<void>}
  */
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
-    const filePath = join(SOURCE_DIRECTORY, key)
+    const filePath = resolve(join(SOURCE_DIRECTORY, key))
     await writeFile(filePath, await getS3ObjectFor(key))
-    statsMap.set(filePath, await stat(filePath))
   } catch (e) {
     handleError(e)
   }
@@ -177,13 +114,12 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
 /**
  * Objects removed from S3 are unlinked from the file system
  *
- * @param {S3} s3
+ * @param {S3}
  * @returns {Promise<void>}
  */
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
-    const filePath = join(SOURCE_DIRECTORY, key)
-    statsMap.delete(filePath)
+    const filePath = resolve(join(SOURCE_DIRECTORY, key))
     await unlink(filePath)
   } catch (e) {
     handleError(e)
@@ -191,53 +127,42 @@ async function handleS3ObjectRemoved ({ object: { key } = {} }) {
 }
 
 /**
- * Handles the generator iterator
+ * Handle the message from SQS
  *
+ * @param {Message} message
  * @returns {Promise<void>}
  */
-async function readMessageQueue () {
-  const client = new SQSClient({ region: AWS_REGION })
+async function handleSQSMessage (message) {
+  for (const s3 of genS3(message)) {
+    const {
+      configurationId = ''
+    } = s3
 
-  for await (const { Messages: messages = [] } of genSQSMessage(client, AWS_QUEUE_URL)) {
-    let isMessageHandled = false
+    if (configurationId.startsWith('CSVCreated')) {
+      await handleS3ObjectCreated(s3)
 
-    while (messages.length) {
-      const message = messages.shift()
+      await sendSQSDeleteMessageCommand(message)
+    } else {
+      if (configurationId.startsWith('CSVRemoved')) {
+        await handleS3ObjectRemoved(s3)
 
-      for (const s3 of genS3(message)) {
-        const {
-          configurationId = ''
-        } = s3
-
-        if (configurationId.startsWith('CSVCreated')) {
-          await handleS3ObjectCreated(s3)
-          isMessageHandled = true
-        } else {
-          if (configurationId.startsWith('CSVRemoved')) {
-            await handleS3ObjectRemoved(s3)
-            isMessageHandled = true
-          }
-        }
-      }
-
-      if (isMessageHandled) {
-        const {
-          ReceiptHandle: receiptHandle
-        } = message
-
-        try {
-          const command = new DeleteMessageCommand({
-            QueueUrl: AWS_QUEUE_URL,
-            ReceiptHandle: receiptHandle
-          })
-
-          await client.send(command)
-        } catch (e) {
-          handleError(e)
-        }
+        await sendSQSDeleteMessageCommand(message)
       }
     }
   }
+}
+
+/**
+ * Handle the `PubSub` topic
+ *
+ * @param {string} topic
+ * @param {Message} message
+ * @returns {Promise<void>}
+ */
+async function handleSQSMessageTopic (topic, message) {
+  return (
+    await handleSQSMessage(message)
+  )
 }
 
 /**
@@ -260,9 +185,8 @@ async function syncDataWithS3 () {
       } = contents.shift()
 
       if (extname(key) === '.csv') {
-        const filePath = join(SOURCE_DIRECTORY, key)
+        const filePath = resolve(join(SOURCE_DIRECTORY, key))
         await writeFile(filePath, await getS3ObjectFor(key))
-        statsMap.set(filePath, await stat(filePath))
       }
     }
   } catch (e) {
@@ -302,10 +226,7 @@ export default async function ingestData () {
 
   console.log('Ingesting data complete.')
 
-  /**
-   *  Initiate the generator iterator after execution is complete
-   */
-  setImmediate(async () => await readMessageQueue())
+  PubSub.subscribe('aws:sqs:message', handleSQSMessageTopic)
 
   /**
    *  Provided S3 had source CSVs to sync, their transformation is now
@@ -335,14 +256,20 @@ export default async function ingestData () {
        *  Use `ignoreInitial` so as not to raise `add` events for CSVs we
        *  have just synced when Chokidar initialises
        */
-      .watch(SOURCE_PATTERN, { persistent: true, ignoreInitial: true })
+      .watch(SOURCE_PATTERN, { persistent: true, ignoreInitial: true, awaitWriteFinish: true })
       /**
        *  But handle `add` events to sync CSVs uploaded into S3 while the
        *  application is running
        */
-      .on('add', handleDataFilePathChange)
-      .on('change', handleDataFilePathChange)
-      .on('unlink', handleDataFilePathRemove)
+      .on('add', async (filePath) => {
+        await handleDataFilePathChange(filePath)
+      })
+      .on('change', async (filePath) => {
+        await handleDataFilePathChange(filePath)
+      })
+      .on('unlink', async (filePath) => {
+        await handleDataFilePathRemove(filePath)
+      })
       .on('error', handleFilePathError)
   )
 }

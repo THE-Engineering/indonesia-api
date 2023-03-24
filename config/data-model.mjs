@@ -1,12 +1,15 @@
 import {
-  resolve
+  resolve,
+  join
 } from 'node:path'
 
 import args from './args.mjs'
 
-export const XLSX_DIRECTORY = args.get('XLSX_DIRECTORY')
+export const XLSX_DIRECTORY = resolve(args.get('XLSX_DIRECTORY'))
 
 export const DATA_MODEL_FILE_NAME = args.get('DATA_MODEL_FILE_NAME')
+export const DATA_MODEL_FILE_PATH = resolve(join(XLSX_DIRECTORY, DATA_MODEL_FILE_NAME))
+
 export const SWAGGER_YAML_FILE_PATH = resolve(args.get('SWAGGER_YAML_FILE_PATH'))
 export const SWAGGER_JSON_FILE_PATH = resolve(args.get('SWAGGER_JSON_FILE_PATH'))
 

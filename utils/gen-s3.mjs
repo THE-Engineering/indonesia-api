@@ -14,14 +14,10 @@
  * Generator to read a message
  *
  * @generator
- * @param {Message} message
+ * @param {Message}
  * @yields {S3}
  */
-export default function * genS3From (message) {
-  const {
-    Body: body
-  } = message
-
+export default function * genS3 ({ Body: body }) {
   const {
     Records: records = []
   } = JSON.parse(body)

@@ -14,9 +14,9 @@ import {
  * @param {ReceiveMessageCommandOutput} message
  * @returns {boolean}
  */
-function hasMessages (message) {
-  if (Reflect.has(message, 'Messages')) {
-    return Boolean(Reflect.get(message, 'Messages'))
+function hasMessages (commandOutput) {
+  if (Reflect.has(commandOutput, 'Messages')) {
+    return Boolean(Reflect.get(commandOutput, 'Messages'))
   }
 
   return false
@@ -30,10 +30,10 @@ function hasMessages (message) {
  * @param {string} queueUrl
  * @yields {ReceiveMessageCommandOutput}
  */
-export default async function * genSQSMessage (client, queueUrl) {
+export default async function * genSQSReceiveMessage (client, queueUrl) {
   /**
    *  Switch between long polling and short polling
-   *  depending on whether a message has been
+   *  depending on whether messages have been
    *  received from the queue
    */
   let waitTimeSeconds = 20
@@ -45,18 +45,18 @@ export default async function * genSQSMessage (client, queueUrl) {
       MaxNumberOfMessages: 1
     })
 
-    const message = await client.send(command)
-    if (hasMessages(message)) {
+    const commandOutput = await client.send(command)
+    if (hasMessages(commandOutput)) {
       /**
-       *  A message has been received from the queue
+       *  Messages have been received from the queue
        *  so ensure short polling, and yield
        */
       waitTimeSeconds = 0
 
-      yield message
+      yield commandOutput
     } else {
       /**
-       *  A message has not been received from the queue
+       *  No message has been received from the queue
        *  so ensure long polling
        */
       waitTimeSeconds = 20

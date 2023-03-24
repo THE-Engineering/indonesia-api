@@ -5,9 +5,12 @@ import {
 
 import {
   readFile,
-  writeFile,
-  unlink
+  writeFile
 } from 'node:fs/promises'
+
+import {
+  deleteAsync as del
+} from 'del'
 
 import csv from 'csvtojson'
 
@@ -65,11 +68,18 @@ function transformFileData (buffer) {
  * @param {string} targetPath - A file path for a JSON file
  * @returns {Promise<void>}
  */
-export default function transformFromCsvToJson (sourcePath, targetPath) {
+export default async function transformFromCsvToJson (sourcePath, targetPath) {
+  /**
+   *  Generate the `writerPath` file path for the write stream
+   */
+  const writerPath = toJsonFilePath(sourcePath, SOURCE_DIRECTORY)
+  /**
+   *  Ensure to delete any file at `writerPath`
+   */
+  await del(writerPath)
+
   return (
     new Promise((resolve, reject) => {
-      const writerPath = toJsonFilePath(sourcePath, SOURCE_DIRECTORY)
-
       const reader = createReadStream(sourcePath)
       const writer = createWriteStream(writerPath)
 
@@ -79,8 +89,11 @@ export default function transformFromCsvToJson (sourcePath, targetPath) {
           writer
             .on('finish', async function handleWriteStreamFinish () {
               try {
+                /**
+                 *  Read from `writerPath` async, transform the buffer, and write to
+                 *  `targetPath` async
+                 */
                 await writeFile(targetPath, transformFileData(await readFile(writerPath)))
-                await unlink(writerPath)
               } catch (e) {
                 handleFilePathError(e)
               }

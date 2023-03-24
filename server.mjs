@@ -33,6 +33,7 @@ import {
 
 import ingestDataModel from './ingest/data-model.mjs'
 import ingestData from './ingest/data.mjs'
+import ingestFromQueue from './ingest/from-queue.mjs'
 
 import IMPACT_OVERALL_SCHEMA from './server/schemas/impact-overall-schema.mjs'
 import WUR_PORTAL_SCHEMA from './server/schemas/wur-portal-schema.mjs'
@@ -63,6 +64,7 @@ app.use(basicAuth({
 
 ingestDataModel()
   .then(ingestData)
+  .then(ingestFromQueue)
   .then(() => {
     {
       const SWAGGER_OPTIONS = {

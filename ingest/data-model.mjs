@@ -1,6 +1,7 @@
 /**
  * @typedef {import('fs').Stats} Stats
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
+ * @typedef {import('@aws-sdk/client-sqs').Message} Message
  * @typedef {import('../utils/gen-s3.mjs').S3} S3
  */
 
@@ -12,14 +13,12 @@ import {
 } from 'node:path'
 
 import {
-  unlink,
-  writeFile
+  readFile,
+  writeFile,
+  unlink
 } from 'node:fs/promises'
 
-import {
-  SQSClient,
-  DeleteMessageCommand
-} from '@aws-sdk/client-sqs'
+import PubSub from 'pubsub-js'
 
 import {
   S3Client,
@@ -27,8 +26,6 @@ import {
 } from '@aws-sdk/client-s3'
 
 import glob from 'glob'
-
-import XLSX from 'node-xlsx'
 
 import chokidar from 'chokidar'
 
@@ -42,29 +39,27 @@ import {
 
 import {
   XLSX_DIRECTORY,
-  DATA_MODEL_FILE_NAME,
+  DATA_MODEL_FILE_PATH,
   SWAGGER_YAML_FILE_PATH,
   SWAGGER_JSON_FILE_PATH
 } from '#config/data-model'
 
 import {
   AWS_REGION,
-  AWS_BUCKET_NAME,
-  AWS_QUEUE_URL
+  AWS_BUCKET_NAME
 } from '#config'
 
-import genSQSMessage from '#utils/gen-sqs-message'
 import genS3 from '#utils/gen-s3'
-import {
-  getS3ObjectFor
-} from '#utils/client-s3'
+import getS3ObjectFor from '#utils/get-s3-object-for'
 import handleFilePathError from '#utils/handle-file-path-error'
 import handleError from '#utils/handle-error'
 
+import {
+  sendSQSDeleteMessageCommand
+} from './from-queue.mjs'
+
 import transformFromXlsxToYaml from './transform-from-xlsx-to-yaml.mjs'
 import transformFromYamlToJson from './transform-from-yaml-to-json.mjs'
-
-const DATA_MODEL_FILE_PATH = resolve(join(XLSX_DIRECTORY, DATA_MODEL_FILE_NAME))
 
 /**
  * Replaces `+` characters with whitespace
@@ -74,6 +69,16 @@ const DATA_MODEL_FILE_PATH = resolve(join(XLSX_DIRECTORY, DATA_MODEL_FILE_NAME))
  */
 function toFileName (s) {
   return s.replace(/\+/g, String.fromCodePoint(32))
+}
+
+/**
+ * Resolves `s` to a file path
+ *
+ * @param {string} s
+ * @returns {string}
+ */
+function toFilePath (s) {
+  return resolve(join(XLSX_DIRECTORY, s))
 }
 
 /**
@@ -88,7 +93,7 @@ async function handleDataModelFilePathChange (filePath) {
     await ensureDir(dirname(SWAGGER_YAML_FILE_PATH))
     await ensureDir(dirname(SWAGGER_JSON_FILE_PATH))
 
-    const xlsx = XLSX.parse(filePath)
+    const xlsx = await readFile(filePath)
     const yaml = transformFromXlsxToYaml(xlsx)
     const json = transformFromYamlToJson(yaml)
 
@@ -131,13 +136,13 @@ async function handleDataModelFilePathRemove (filePath) {
 /**
  * Objects created in the S3 bucket are written to the file system
  *
- * @param {S3} s3
+ * @param {S3}
  * @returns {Promise<void>}
  */
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
     const fileName = toFileName(key)
-    const filePath = join(XLSX_DIRECTORY, fileName)
+    const filePath = toFilePath(fileName)
     await writeFile(filePath, await getS3ObjectFor(fileName))
   } catch (e) {
     handleError(e)
@@ -147,13 +152,13 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
 /**
  * Objects removed from the S3 bucket are unlinked from the file system
  *
- * @param {S3} s3
+ * @param {S3}
  * @returns {Promise<void>}
  */
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
     const fileName = toFileName(key)
-    const filePath = join(XLSX_DIRECTORY, fileName)
+    const filePath = toFilePath(fileName)
     await unlink(filePath)
   } catch (e) {
     handleError(e)
@@ -161,53 +166,42 @@ async function handleS3ObjectRemoved ({ object: { key } = {} }) {
 }
 
 /**
- * Handles the generator iterator
+ * Handle the message from SQS
  *
+ * @param {Message} message
  * @returns {Promise<void>}
  */
-async function readMessageQueue () {
-  const client = new SQSClient({ region: AWS_REGION })
+async function handleSQSMessage (message) {
+  for (const s3 of genS3(message)) {
+    const {
+      configurationId = ''
+    } = s3
 
-  for await (const { Messages: messages = [] } of genSQSMessage(client, AWS_QUEUE_URL)) {
-    let isMessageHandled = false
+    if (configurationId.startsWith('XLSXCreated')) {
+      await handleS3ObjectCreated(s3)
 
-    while (messages.length) {
-      const message = messages.shift()
+      await sendSQSDeleteMessageCommand(message)
+    } else {
+      if (configurationId.startsWith('XLSXRemoved')) {
+        await handleS3ObjectRemoved(s3)
 
-      for (const s3 of genS3(message)) {
-        const {
-          configurationId = ''
-        } = s3
-
-        if (configurationId.startsWith('XLSXCreated')) {
-          await handleS3ObjectCreated(s3)
-          isMessageHandled = true
-        } else {
-          if (configurationId.startsWith('XLSXRemoved')) {
-            await handleS3ObjectRemoved(s3)
-            isMessageHandled = true
-          }
-        }
-      }
-
-      if (isMessageHandled) {
-        const {
-          ReceiptHandle: receiptHandle
-        } = message
-
-        try {
-          const command = new DeleteMessageCommand({
-            QueueUrl: AWS_QUEUE_URL,
-            ReceiptHandle: receiptHandle
-          })
-
-          await client.send(command)
-        } catch (e) {
-          handleError(e)
-        }
+        await sendSQSDeleteMessageCommand(message)
       }
     }
   }
+}
+
+/**
+ * Handle the `PubSub` topic
+ *
+ * @param {string} topic
+ * @param {Message} message
+ * @returns {Promise<void>}
+ */
+async function handleSQSMessageTopic (topic, message) {
+  return (
+    await handleSQSMessage(message)
+  )
 }
 
 /**
@@ -231,7 +225,7 @@ async function syncDataModelWithS3 () {
 
       if (extname(key) === '.xlsx') {
         const fileName = toFileName(key)
-        const filePath = join(XLSX_DIRECTORY, fileName)
+        const filePath = toFilePath(fileName)
         await writeFile(filePath, await getS3ObjectFor(fileName))
       }
     }
@@ -264,10 +258,7 @@ export default async function ingestDataModel () {
 
   console.log('Ingesting data model complete.')
 
-  /**
-   *  Initiate the generator iterator after execution is complete
-   */
-  setImmediate(async () => await readMessageQueue())
+  PubSub.subscribe('aws:sqs:message', handleSQSMessageTopic)
 
   /**
    *  Provided S3 had source XLSXs to sync, the Swagger YAML and JSON
@@ -296,9 +287,15 @@ export default async function ingestDataModel () {
        *  But handle `add` events to sync XLSXs uploaded into S3 while the
        *  application is running
        */
-      .on('add', handleDataModelFilePathChange)
-      .on('change', handleDataModelFilePathChange)
-      .on('unlink', handleDataModelFilePathRemove)
+      .on('add', async (filePath) => {
+        await handleDataModelFilePathChange(filePath)
+      })
+      .on('change', async (filePath) => {
+        await handleDataModelFilePathChange(filePath)
+      })
+      .on('unlink', async (filePath) => {
+        await handleDataModelFilePathRemove(filePath)
+      })
       .on('error', handleFilePathError)
   )
 }
