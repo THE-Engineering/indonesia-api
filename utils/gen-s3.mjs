@@ -11,7 +11,7 @@
  */
 
 /**
- * Generator to read a message
+ * Generator to destructure a message
  *
  * @generator
  * @param {Message}

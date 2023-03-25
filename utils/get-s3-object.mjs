@@ -19,7 +19,7 @@ import {
  * @param {GetObjectCommand} command
  * @returns {Promise<string>}
  */
-export async function toSignedUrl (client, command) {
+async function toSignedUrl (client, command) {
   return (
     await getSignedUrl(client, command, { expiresIn: 3600 })
   )
@@ -31,7 +31,7 @@ export async function toSignedUrl (client, command) {
  * @param {string} url - The S3 signed url
  * @returns {Promise<Blob>}
  */
-export async function getBlobFromUrl (url) {
+async function getBlobFromUrl (url) {
   const response = await fetch(url)
 
   return (
@@ -45,7 +45,7 @@ export async function getBlobFromUrl (url) {
  * @param {Blob} blob
  * @returns {Promise<Buffer>}
  */
-export async function fromBlobToBuffer (blob) {
+async function fromBlobToBuffer (blob) {
   const arrayBuffer = await blob.arrayBuffer()
 
   return Buffer.from(arrayBuffer)
@@ -57,7 +57,7 @@ export async function fromBlobToBuffer (blob) {
  * @param {string} key
  * @returns {Promise<Buffer>}
  */
-export default async function getS3ObjectFor (key) {
+export default async function getS3Object (key) {
   const client = new S3Client({ region: AWS_REGION })
   const command = new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: key })
 

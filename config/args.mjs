@@ -71,8 +71,6 @@ function transform ({ key, value }) {
  *  don't pass the same object to both methods)
  */
 export const args = nconf.argv({ transform }).env({ transform }).defaults({
-  BASIC_AUTH_USERS: {},
-
   XLSX_DIRECTORY: DEFAULT_XLSX_DIRECTORY,
   SOURCE_DIRECTORY: DEFAULT_SOURCE_DIRECTORY,
   TARGET_DIRECTORY: DEFAULT_TARGET_DIRECTORY,
@@ -112,6 +110,7 @@ export const args = nconf.argv({ transform }).env({ transform }).defaults({
   SCHEMA_MIN_YEAR: DEFAULT_SCHEMA_MIN_YEAR,
   SCHEMA_MAX_YEAR: DEFAULT_SCHEMA_MAX_YEAR,
 
+  BASIC_AUTH_USERS: {},
   PORT: DEFAULT_PORT
 }).get()
 

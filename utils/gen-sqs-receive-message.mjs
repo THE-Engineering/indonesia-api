@@ -4,8 +4,14 @@
  */
 
 import {
+  SQSClient,
   ReceiveMessageCommand
 } from '@aws-sdk/client-sqs'
+
+import {
+  AWS_REGION,
+  AWS_QUEUE_URL
+} from '#config'
 
 /**
  * Interrogates the message to determine whether it has
@@ -26,11 +32,11 @@ function hasMessages (commandOutput) {
  * Generator to read from the SQS queue
  *
  * @generator
- * @param {SQSClient} client
- * @param {string} queueUrl
- * @yields {ReceiveMessageCommandOutput}
+ * @yields {Promise<ReceiveMessageCommandOutput>}
  */
-export default async function * genSQSReceiveMessage (client, queueUrl) {
+export default async function * genSQSReceiveMessage () {
+  const client = new SQSClient({ region: AWS_REGION })
+
   /**
    *  Switch between long polling and short polling
    *  depending on whether messages have been
@@ -40,7 +46,7 @@ export default async function * genSQSReceiveMessage (client, queueUrl) {
 
   while (true) {
     const command = new ReceiveMessageCommand({
-      QueueUrl: queueUrl,
+      QueueUrl: AWS_QUEUE_URL,
       WaitTimeSeconds: waitTimeSeconds,
       MaxNumberOfMessages: 1
     })

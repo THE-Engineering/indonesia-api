@@ -20,11 +20,6 @@ import {
 
 import PubSub from 'pubsub-js'
 
-import {
-  S3Client,
-  ListObjectsCommand
-} from '@aws-sdk/client-s3'
-
 import glob from 'glob'
 
 import chokidar from 'chokidar'
@@ -44,19 +39,12 @@ import {
   SWAGGER_JSON_FILE_PATH
 } from '#config/data-model'
 
-import {
-  AWS_REGION,
-  AWS_BUCKET_NAME
-} from '#config'
-
 import genS3 from '#utils/gen-s3'
-import getS3ObjectFor from '#utils/get-s3-object-for'
+import getS3Objects from '#utils/get-s3-objects'
+import getS3Object from '#utils/get-s3-object'
+import dispatchSQSDeleteMessage from '#utils/dispatch-sqs-delete-message'
 import handleFilePathError from '#utils/handle-file-path-error'
 import handleError from '#utils/handle-error'
-
-import {
-  sendSQSDeleteMessageCommand
-} from './from-queue.mjs'
 
 import transformFromXlsxToYaml from './transform-from-xlsx-to-yaml.mjs'
 import transformFromYamlToJson from './transform-from-yaml-to-json.mjs'
@@ -143,7 +131,7 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
     const fileName = toFileName(key)
     const filePath = toFilePath(fileName)
-    await writeFile(filePath, await getS3ObjectFor(fileName))
+    await writeFile(filePath, await getS3Object(fileName))
   } catch (e) {
     handleError(e)
   }
@@ -180,12 +168,12 @@ async function handleSQSMessage (message) {
     if (configurationId.startsWith('XLSXCreated')) {
       await handleS3ObjectCreated(s3)
 
-      await sendSQSDeleteMessageCommand(message)
+      await dispatchSQSDeleteMessage(message)
     } else {
       if (configurationId.startsWith('XLSXRemoved')) {
         await handleS3ObjectRemoved(s3)
 
-        await sendSQSDeleteMessageCommand(message)
+        await dispatchSQSDeleteMessage(message)
       }
     }
   }
@@ -199,6 +187,8 @@ async function handleSQSMessage (message) {
  * @returns {Promise<void>}
  */
 async function handleSQSMessageTopic (topic, message) {
+  console.log(`🛸 ${topic}`)
+
   return (
     await handleSQSMessage(message)
   )
@@ -211,12 +201,9 @@ async function handleSQSMessageTopic (topic, message) {
  */
 async function syncDataModelWithS3 () {
   try {
-    const client = new S3Client({ region: AWS_REGION })
-    const command = new ListObjectsCommand({ Bucket: AWS_BUCKET_NAME })
-
     const {
       Contents: contents = []
-    } = await client.send(command)
+    } = await getS3Objects()
 
     while (contents.length) {
       const {
@@ -226,7 +213,7 @@ async function syncDataModelWithS3 () {
       if (extname(key) === '.xlsx') {
         const fileName = toFileName(key)
         const filePath = toFilePath(fileName)
-        await writeFile(filePath, await getS3ObjectFor(fileName))
+        await writeFile(filePath, await getS3Object(fileName))
       }
     }
   } catch (e) {

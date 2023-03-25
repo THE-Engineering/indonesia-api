@@ -19,11 +19,6 @@ import {
 
 import PubSub from 'pubsub-js'
 
-import {
-  S3Client,
-  ListObjectsCommand
-} from '@aws-sdk/client-s3'
-
 import glob from 'glob'
 
 import chokidar from 'chokidar'
@@ -41,26 +36,39 @@ import {
   TARGET_DIRECTORY
 } from '#config/data'
 
-import {
-  AWS_REGION,
-  AWS_BUCKET_NAME
-} from '#config'
-
 import genS3 from '#utils/gen-s3'
-import getS3ObjectFor from '#utils/get-s3-object-for'
+import getS3Objects from '#utils/get-s3-objects'
+import getS3Object from '#utils/get-s3-object'
+import dispatchSQSDeleteMessage from '#utils/dispatch-sqs-delete-message'
 import toJsonFilePath from '#utils/to-json-file-path'
 import handleFilePathError from '#utils/handle-file-path-error'
 import handleError from '#utils/handle-error'
-
-import {
-  sendSQSDeleteMessageCommand
-} from './from-queue.mjs'
 
 import transformFromCsvToJson from './transform-from-csv-to-json.mjs'
 
 const SOURCE_PATTERN = resolve(join(SOURCE_DIRECTORY, '*.csv'))
 
 const TARGET_PATTERN = resolve(join(TARGET_DIRECTORY, '*.json'))
+
+/**
+ * Replaces `+` characters with whitespace
+ *
+ * @param {string} s
+ * @returns {string}
+ */
+function toFileName (s) {
+  return s.replace(/\+/g, String.fromCodePoint(32))
+}
+
+/**
+ * Resolves `s` to a file path
+ *
+ * @param {string} s
+ * @returns {string}
+ */
+function toFilePath (s) {
+  return resolve(join(SOURCE_DIRECTORY, s))
+}
 
 /**
  * When the source file is changed the target file is changed
@@ -104,8 +112,9 @@ async function handleDataFilePathRemove (sourcePath) {
  */
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
-    const filePath = resolve(join(SOURCE_DIRECTORY, key))
-    await writeFile(filePath, await getS3ObjectFor(key))
+    const fileName = toFileName(key)
+    const filePath = toFilePath(fileName)
+    await writeFile(filePath, await getS3Object(fileName))
   } catch (e) {
     handleError(e)
   }
@@ -119,7 +128,8 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
  */
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
-    const filePath = resolve(join(SOURCE_DIRECTORY, key))
+    const fileName = toFileName(key)
+    const filePath = toFilePath(fileName)
     await unlink(filePath)
   } catch (e) {
     handleError(e)
@@ -141,12 +151,12 @@ async function handleSQSMessage (message) {
     if (configurationId.startsWith('CSVCreated')) {
       await handleS3ObjectCreated(s3)
 
-      await sendSQSDeleteMessageCommand(message)
+      await dispatchSQSDeleteMessage(message)
     } else {
       if (configurationId.startsWith('CSVRemoved')) {
         await handleS3ObjectRemoved(s3)
 
-        await sendSQSDeleteMessageCommand(message)
+        await dispatchSQSDeleteMessage(message)
       }
     }
   }
@@ -160,6 +170,8 @@ async function handleSQSMessage (message) {
  * @returns {Promise<void>}
  */
 async function handleSQSMessageTopic (topic, message) {
+  console.log(`🛸 ${topic}`)
+
   return (
     await handleSQSMessage(message)
   )
@@ -172,12 +184,9 @@ async function handleSQSMessageTopic (topic, message) {
  */
 async function syncDataWithS3 () {
   try {
-    const client = new S3Client({ region: AWS_REGION })
-    const command = new ListObjectsCommand({ Bucket: AWS_BUCKET_NAME })
-
     const {
       Contents: contents = []
-    } = await client.send(command)
+    } = await getS3Objects()
 
     while (contents.length) {
       const {
@@ -185,8 +194,9 @@ async function syncDataWithS3 () {
       } = contents.shift()
 
       if (extname(key) === '.csv') {
-        const filePath = resolve(join(SOURCE_DIRECTORY, key))
-        await writeFile(filePath, await getS3ObjectFor(key))
+        const fileName = toFileName(key)
+        const filePath = toFilePath(fileName)
+        await writeFile(filePath, await getS3Object(fileName))
       }
     }
   } catch (e) {
