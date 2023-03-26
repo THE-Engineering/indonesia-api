@@ -1,46 +1,89 @@
+/**
+ * @module #config/args
+ *
+ * @typedef {import('./defaults.mjs').BasicAuth} BasicAuth
+ */
+
+/**
+ * Constants
+ *
+ * @typedef {Object} Args
+ * @property {string} XLSX_DIRECTORY
+ * @property {string} SOURCE_DIRECTORY
+ * @property {string} TARGET_DIRECTORY
+ * @property {string} DATA_MODEL_FILE_NAME
+ * @property {string} SWAGGER_YAML_FILE_PATH
+ * @property {string} SWAGGER_JSON_FILE_PATH
+ * @property {string} IMPACT_OVERALL_DATASET_NAME
+ * @property {string} WUR_PORTAL_DATASET_NAME
+ * @property {string} WUR_CITATIONS_DATASET_NAME
+ * @property {string} WUR_METRICS_DATASET_NAME
+ * @property {string} WUR_ID_MAPPING_DATASET_NAME
+ * @property {string} WUR_REF_DATA_DATASET_NAME
+ * @property {string} IMPACT_OVERALL_COMPONENT_SCHEMA
+ * @property {string} WUR_PORTAL_COMPONENT_SCHEMA
+ * @property {string} WUR_CITATIONS_COMPONENT_SCHEMA
+ * @property {string} WUR_METRICS_COMPONENT_SCHEMA
+ * @property {string} WUR_ID_MAPPING_COMPONENT_SCHEMA
+ * @property {string} WUR_REF_DATA_COMPONENT_SCHEMA
+ * @property {string} IMPACT_OVERALL_LABEL
+ * @property {string} WUR_PORTAL_LABEL
+ * @property {string} WUR_CITATIONS_LABEL
+ * @property {string} WUR_METRICS_LABEL
+ * @property {string} WUR_ID_MAPPING_LABEL
+ * @property {string} WUR_REF_DATA_LABEL
+ * @property {string} IMPACT_OVERALL_FILE_NAME
+ * @property {string} WUR_PORTAL_FILE_NAME
+ * @property {string} WUR_CITATIONS_FILE_NAME
+ * @property {string} WUR_METRICS_FILE_NAME
+ * @property {string} WUR_ID_MAPPING_FILE_NAME
+ * @property {string} WUR_REF_DATA_FILE_NAME
+ * @property {number} SCHEMA_MIN_YEAR
+ * @property {number} SCHEMA_MAX_YEAR
+ * @property {BasicAuth} BASIC_AUTH_USERS
+ * @property {number} PORT
+ */
+
 import 'dotenv/config'
 import nconf from 'nconf'
 
-export const DEFAULT_XLSX_DIRECTORY = '.xlsx'
-export const DEFAULT_SOURCE_DIRECTORY = '.source'
-export const DEFAULT_TARGET_DIRECTORY = '.target'
+import {
+  DEFAULT_XLSX_DIRECTORY,
+  DEFAULT_SOURCE_DIRECTORY,
+  DEFAULT_TARGET_DIRECTORY,
+  DEFAULT_DATA_MODEL_FILE_NAME,
+  DEFAULT_SWAGGER_YAML_FILE_PATH,
+  DEFAULT_SWAGGER_JSON_FILE_PATH,
+  DEFAULT_IMPACT_OVERALL_DATASET_NAME,
+  DEFAULT_WUR_PORTAL_DATASET_NAME,
+  DEFAULT_WUR_CITATIONS_DATASET_NAME,
+  DEFAULT_WUR_METRICS_DATASET_NAME,
+  DEFAULT_WUR_ID_MAPPING_DATASET_NAME,
+  DEFAULT_WUR_REF_DATA_DATASET_NAME,
+  DEFAULT_IMPACT_OVERALL_COMPONENT_SCHEMA,
+  DEFAULT_WUR_PORTAL_COMPONENT_SCHEMA,
+  DEFAULT_WUR_CITATIONS_COMPONENT_SCHEMA,
+  DEFAULT_WUR_METRICS_COMPONENT_SCHEMA,
+  DEFAULT_WUR_ID_MAPPING_COMPONENT_SCHEMA,
+  DEFAULT_WUR_REF_DATA_COMPONENT_SCHEMA,
+  DEFAULT_IMPACT_OVERALL_LABEL,
+  DEFAULT_WUR_PORTAL_LABEL,
+  DEFAULT_WUR_CITATIONS_LABEL,
+  DEFAULT_WUR_METRICS_LABEL,
+  DEFAULT_WUR_ID_MAPPING_LABEL,
+  DEFAULT_WUR_REF_DATA_LABEL,
+  DEFAULT_IMPACT_OVERALL_FILE_NAME,
+  DEFAULT_WUR_PORTAL_FILE_NAME,
+  DEFAULT_WUR_CITATIONS_FILE_NAME,
+  DEFAULT_WUR_METRICS_FILE_NAME,
+  DEFAULT_WUR_ID_MAPPING_FILE_NAME,
+  DEFAULT_WUR_REF_DATA_FILE_NAME,
+  DEFAULT_SCHEMA_MIN_YEAR,
+  DEFAULT_SCHEMA_MAX_YEAR,
+  DEFAULT_PORT
+} from './defaults.mjs'
 
-export const DEFAULT_DATA_MODEL_FILE_NAME = 'Data Model.xlsx'
-export const DEFAULT_SWAGGER_YAML_FILE_PATH = './swagger.yaml'
-export const DEFAULT_SWAGGER_JSON_FILE_PATH = './swagger.json'
-
-export const DEFAULT_IMPACT_OVERALL_DATASET_NAME = 'Impact Overall'
-export const DEFAULT_WUR_PORTAL_DATASET_NAME = 'WUR Portal'
-export const DEFAULT_WUR_CITATIONS_DATASET_NAME = 'WUR Citations'
-export const DEFAULT_WUR_METRICS_DATASET_NAME = 'WUR Metrics'
-export const DEFAULT_WUR_ID_MAPPING_DATASET_NAME = 'University ID mapping'
-export const DEFAULT_WUR_REF_DATA_DATASET_NAME = 'University Ref data'
-
-export const DEFAULT_IMPACT_OVERALL_COMPONENT_SCHEMA = 'ImpactOverall'
-export const DEFAULT_WUR_PORTAL_COMPONENT_SCHEMA = 'WURPortal'
-export const DEFAULT_WUR_CITATIONS_COMPONENT_SCHEMA = 'WURCitations'
-export const DEFAULT_WUR_METRICS_COMPONENT_SCHEMA = 'WURMetrics'
-export const DEFAULT_WUR_ID_MAPPING_COMPONENT_SCHEMA = 'WURIDMapping'
-export const DEFAULT_WUR_REF_DATA_COMPONENT_SCHEMA = 'WURRefData'
-
-export const DEFAULT_IMPACT_OVERALL_LABEL = 'Impact Overall'
-export const DEFAULT_WUR_PORTAL_LABEL = 'WUR Portal'
-export const DEFAULT_WUR_CITATIONS_LABEL = 'WUR Citations'
-export const DEFAULT_WUR_METRICS_LABEL = 'WUR Metrics'
-export const DEFAULT_WUR_ID_MAPPING_LABEL = 'WUR ID Mapping'
-export const DEFAULT_WUR_REF_DATA_LABEL = 'WUR Ref Data'
-
-export const DEFAULT_IMPACT_OVERALL_FILE_NAME = 'Impact_Overall.csv'
-export const DEFAULT_WUR_PORTAL_FILE_NAME = 'WUR_portal.csv'
-export const DEFAULT_WUR_CITATIONS_FILE_NAME = 'WUR_citation.csv'
-export const DEFAULT_WUR_METRICS_FILE_NAME = 'WUR_metrics.csv'
-export const DEFAULT_WUR_ID_MAPPING_FILE_NAME = 'WUR_ID_mapping.csv'
-export const DEFAULT_WUR_REF_DATA_FILE_NAME = 'WUR_Ref_data.csv'
-
-export const DEFAULT_SCHEMA_MIN_YEAR = 2001
-export const DEFAULT_SCHEMA_MAX_YEAR = (new Date()).getFullYear()
-
-export const DEFAULT_PORT = 80
+export * from './defaults.mjs'
 
 function transform ({ key, value }) {
   if (key === 'BASIC_AUTH_USERS') {
@@ -67,8 +110,7 @@ function transform ({ key, value }) {
 }
 
 /**
- *  `argv` and `env` options objects are destroyed (so
- *  don't pass the same object to both methods)
+ * @type {Args}
  */
 export const args = nconf.argv({ transform }).env({ transform }).defaults({
   XLSX_DIRECTORY: DEFAULT_XLSX_DIRECTORY,

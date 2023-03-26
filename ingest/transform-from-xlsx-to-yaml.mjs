@@ -1,4 +1,8 @@
 /**
+ * @module #ingest/transform-xlsx-to-yaml
+ */
+
+/**
  * Params
  *
  * @typedef {Object} Params
@@ -46,9 +50,27 @@
  */
 
 /**
+ * Property
+ *
+ * @typedef {string[]} Property
+ */
+
+/**
+ * Properties
+ *
+ * @typedef {Property[]} Properties
+ */
+
+/**
  * KeyMap
  *
  * @typedef {Object.<string, string>} KeyMap
+ */
+
+/**
+ * IsDataSet filter
+ *
+ * @typedef {({ [column]: name }: {}) => boolean} IsDataSet
  */
 
 import XLSX from 'node-xlsx'
@@ -359,38 +381,38 @@ const WUR_REF_DATA_RESPONSE = `
 /**
  * Removes extraneous end-of-line characters
  *
- * @param {string} s
- * @returns {string}
+ * @param {string} s - The line
+ * @returns {string} The line
  */
 function normalise (s) {
   return s.replace(/^\n+/, '').replace(/\n+$/, '')
 }
 
 /**
- * Gets the dataset name column index
+ * Destructures and returns the `dataSetNameColumn` column index
  *
- * @param {Cols}
- * @returns {number}
+ * @param {Cols} - XLSX worksheet columns descriptor
+ * @returns {number} The `dataSetNameColumn` column index
  */
 function getDataSetNameColumn ({ dataSetNameColumn }) {
   return dataSetNameColumn
 }
 
 /**
- * Gets the field column index
+ * Destructures and returns the `fieldColumn` column index
  *
- * @param {Cols}
- * @returns {number}
+ * @param {Cols} - XLSX worksheet columns descriptor
+ * @returns {number} The `fieldColumn` column index
  */
 function getFieldColumn ({ fieldColumn }) {
   return fieldColumn
 }
 
 /**
- * Gets the type column index
+ * Destructures and returns the `typeColumn` column index
  *
- * @param {Cols}
- * @returns {number}
+ * @param {Cols} - XLSX worksheet columns descriptor
+ * @returns {number} The `typeColumn` column index
  */
 function getTypeColumn ({ typeColumn }) {
   return typeColumn
@@ -399,10 +421,10 @@ function getTypeColumn ({ typeColumn }) {
 /**
  * Generates the component schema `$ref`
  *
- * @param {KeyMap} keyMap
- * @param {string} field
- * @param {string} type
- * @returns {string}
+ * @param {KeyMap} keyMap - Describes the mapping of dataset values to request query parameters
+ * @param {string} field - The field name
+ * @param {string} type - The field type
+ * @returns {string} YAML component schema `$ref`
  */
 function toComponentSchemaRef (keyMap, field, type) {
   const key = field.trim()
@@ -427,8 +449,8 @@ function toComponentSchemaRef (keyMap, field, type) {
 /**
  * Generates an array of `required` strings
  *
- * @param {Component[]} components
- * @returns {string[]}
+ * @param {Component[]} components - The component descriptors
+ * @returns {string[]} An array of `required` strings
  */
 function transformToRequired (components) {
   return (
@@ -440,9 +462,9 @@ function transformToRequired (components) {
 /**
  * Generates an array of `properties` arrays of strings
  *
- * @param {Component[]} components
- * @param {KeyMap} keyMap
- * @returns {string[][]}
+ * @param {Component[]} components - The component descriptors
+ * @param {KeyMap} keyMap - Describes the mapping of dataset values to request query parameters
+ * @returns {Property[]} An array of `properties` arrays of strings
  */
 function transformToProperties (components, keyMap) {
   return (
@@ -457,9 +479,9 @@ function transformToProperties (components, keyMap) {
 /**
  * Transforms the array of `required` strings to a string
  *
- * @param {string[]} required
- * @param {number} keyStart
- * @returns {string}
+ * @param {string[]} required - The array of `required` strings
+ * @param {number} keyStart - Indentation start position
+ * @returns {string} YAML `required`
  */
 function toRequired (required, keyStart = 0) {
   return (
@@ -472,9 +494,9 @@ function toRequired (required, keyStart = 0) {
 /**
  * Transforms the array of `properties` arrays of strings to a string
  *
- * @param {string[][]} properties
- * @param {number} keyStart
- * @returns {string}
+ * @param {Property[]} properties - The array `properties` arrays of strings
+ * @param {number} keyStart - Indentation start position
+ * @returns {string} YAML `properties`
  */
 function toProperties (properties, keyStart = 0) {
   return (
@@ -494,9 +516,9 @@ function toProperties (properties, keyStart = 0) {
 /**
  * Creates a filter to get the dataset matching the dataset name
  *
- * @param {number} column
- * @param {string} name
- * @returns {({ [column]: name }: {}) => boolean}
+ * @param {number} column - The column index
+ * @param {string} name - The dataset name
+ * @returns {IsDataSet} A filter
  */
 function getIsDataSetFor (column, name) {
   const NAME = name.toLowerCase()
@@ -510,10 +532,10 @@ function getIsDataSetFor (column, name) {
  * Implements the filter to interrogate the datasets to determine whether
  * the dataset matching the dataset name is present
  *
- * @param {number} column
- * @param {string} name
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {number} column - The column index
+ * @param {string} name - The dataset name
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the dataset matching the dataset name is present
  */
 function hasDataSet (column, name, rows) {
   const isDataSet = getIsDataSetFor(column, name)
@@ -527,10 +549,10 @@ function hasDataSet (column, name, rows) {
 /**
  * Implements the filter to get the dataset matching the dataset name
  *
- * @param {number} column
- * @param {string} name
- * @param {Rows} rows
- * @returns {Rows}
+ * @param {number} column - The column index
+ * @param {string} name - The dataset name
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {Rows} XLSX worksheet rows matching the dataset name
  */
 function getDataSet (column, name, rows) {
   const isDataSet = getIsDataSetFor(column, name)
@@ -544,8 +566,10 @@ function getDataSet (column, name, rows) {
 /**
  * Transforms the dataset array to a component object
  *
- * @param {Row}
- * @returns {Component}
+ * @param {number} fieldColumn - A column index
+ * @param {number} typeColumn - A column index
+ * @param {Row} - An XLSX worksheet row
+ * @returns {Component} A component descriptor
  */
 function transformFromDataSetToComponent (fieldColumn, typeColumn, { [fieldColumn]: field, [typeColumn]: type }) {
   return {
@@ -557,9 +581,9 @@ function transformFromDataSetToComponent (fieldColumn, typeColumn, { [fieldColum
 /**
  * Transforms the datasets arrays to components objects
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {Component[]}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {Component[]} An array of component descriptors
  */
 function transformFromDataSetToComponents (cols, rows) {
   const fieldColumn = getFieldColumn(cols)
@@ -572,12 +596,12 @@ function transformFromDataSetToComponents (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `Impact Overall` dataset
+ * Interrogates `cols` and `rows` to determine whether the `Impact Overall` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `Impact Overall` dataset is present
  */
 function hasImpactOverallDataSet (cols, rows) {
   return (
@@ -586,12 +610,12 @@ function hasImpactOverallDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Portal` dataset
+ * Interrogates `cols` and `rows` to determine whether the `WUR Portal` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `WUR Portal` dataset is present
  */
 function hasWURPortalDataSet (cols, rows) {
   return (
@@ -600,12 +624,12 @@ function hasWURPortalDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Citatations` dataset
+ * Interrogates `cols` and `rows` to determine whether the `WUR Citatations` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `WUR Citatations` dataset is present
  */
 function hasWURCitationsDataSet (cols, rows) {
   return (
@@ -614,12 +638,12 @@ function hasWURCitationsDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Metrics` dataset
+ * Interrogates `cols` and `rows` to determine whether the `WUR Metrics` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `WUR Metrics` dataset is present
  */
 function hasWURMetricsDataSet (cols, rows) {
   return (
@@ -628,12 +652,12 @@ function hasWURMetricsDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR ID Mapping` dataset
+ * Interrogates `cols` and `rows` to determine whether the `WUR ID Mapping` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `WUR ID Mapping` dataset is present
  */
 function hasWURIDMappingDataSet (cols, rows) {
   return (
@@ -642,12 +666,12 @@ function hasWURIDMappingDataSet (cols, rows) {
 }
 
 /**
- * Interrogates the rows to determine whether the `WUR Ref Data` dataset
+ * Interrogates `cols` and `rows` to determine whether the `WUR Ref Data` dataset
  * is present
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {boolean}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {boolean} Whether the `WUR Ref Data` dataset is present
  */
 function hasWURRefDataDataSet (cols, rows) {
   return (
@@ -656,12 +680,12 @@ function hasWURRefDataDataSet (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/${componentSchema}
+ * Generates the Swagger YAML `components/schemas/${componentSchema}` definition
  *
- * @param {string} componentSchema
- * @param {Component[]} components
- * @param {KeyMap} keyMap
- * @returns {string}
+ * @param {string} componentSchema - The component schema name
+ * @param {Component[]} components - An array of components
+ * @param {KeyMap} keyMap - Describes the mapping of dataset values to request query parameters
+ * @returns {string} The Swagger YAML `components/schemas/${componentSchema}` definition
  */
 function toComponentSchema (componentSchema, components, keyMap) {
   return `
@@ -675,11 +699,11 @@ ${toProperties(transformToProperties(components, keyMap), 8)}
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/ImpactOverall
+ * Generates the Swagger YAML `components/schemas/ImpactOverall` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/ImpactOverall` definition
  */
 function toImpactOverallComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -709,11 +733,11 @@ function toImpactOverallComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/WURPortal
+ * Generates the Swagger YAML `components/schemas/WURPortal` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/WURPortal` definition
  */
 function toWURPortalComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -743,11 +767,11 @@ function toWURPortalComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/WURCitations
+ * Generates the Swagger YAML `components/schemas/WURCitations` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/WURCitations` definition
  */
 function toWURCitationsComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -777,11 +801,11 @@ function toWURCitationsComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/WURMetrics
+ * Generates the Swagger YAML `components/schemas/WURMetrics` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/WURMetrics` definition
  */
 function toWURMetricsComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -811,11 +835,11 @@ function toWURMetricsComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/WURIDMapping
+ * Generates the Swagger YAML `components/schemas/WURIDMapping` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/WURIDMapping` definition
  */
 function toWURIDMappingComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -845,11 +869,11 @@ function toWURIDMappingComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `components/schemas/WURRefData`
+ * Generates the Swagger YAML `components/schemas/WURRefData` definition
  *
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas/WURRefData` definition
  */
 function toWURRefDataComponentSchema (cols, rows) {
   const column = getDataSetNameColumn(cols)
@@ -879,10 +903,10 @@ function toWURRefDataComponentSchema (cols, rows) {
 }
 
 /**
- * Generates the Swagger YAML `paths`
+ * Generates the Swagger YAML `paths` definition
  *
- * @param {Params}
- * @returns {string}
+ * @param {Params} - Describes which datasets are present
+ * @returns {string} The Swagger YAML `paths` definition
  */
 function getPaths ({
   hasImpactOverall,
@@ -903,12 +927,12 @@ function getPaths ({
 }
 
 /**
- * Generates the Swagger YAML `components/schemas`
+ * Generates the Swagger YAML `components/schemas` definition
  *
- * @param {Params}
- * @param {Cols} cols
- * @param {Rows} rows
- * @returns {string}
+ * @param {Params} - Describes which datasets are present
+ * @param {Cols} cols - XLSX worksheet columns descriptor
+ * @param {Rows} rows - XLSX worksheet rows
+ * @returns {string} The Swagger YAML `components/schemas` definition
  */
 function getComponentsSchemas ({
   hasImpactOverall,
@@ -929,10 +953,10 @@ function getComponentsSchemas ({
 }
 
 /**
- * Generates the Swagger YAML `responses`
+ * Generates the Swagger YAML `responses` definition
  *
- * @param {Params}
- * @returns {string}
+ * @param {Params} - Describes which datasets are present
+ * @returns {string} The Swagger YAML `responses` definition
  */
 function getResponses ({
   hasImpactOverall,
@@ -955,8 +979,8 @@ function getResponses ({
 /**
  * Transform from XLSX to YAML
  *
- * @param {Buffer|string} xlsx
- * @returns {string}
+ * @param {Buffer|string} xlsx - The XLSX document
+ * @returns {string} YAML
  */
 export default function transformFromXlsxToYaml (xlsx) {
   const [

@@ -1,3 +1,7 @@
+/**
+ * @module #ingest/transform-csv-to-json
+ */
+
 import {
   createReadStream,
   createWriteStream
@@ -25,7 +29,7 @@ import handleFilePathError from '#utils/handle-file-path-error'
  * Parse the JSON string (but only take one argument from `map`)
  *
  * @param {string} string - From the array
- * @returns {Object.<string, (string|number|boolean)>} - An object
+ * @returns {Object.<string, (string|number|boolean)>} An object
  */
 function fromJson (string) {
   return JSON.parse(string)
@@ -35,7 +39,7 @@ function fromJson (string) {
  * Split on end-of-line characters and remove zero-length lines
  *
  * @param {string} string - From the file data buffer
- * @returns {string[]} - An array of file data split to lines
+ * @returns {string[]} An array of file data split to lines
  * and filtered to remove any falsy
  */
 function toArray (string) {
@@ -47,7 +51,7 @@ function toArray (string) {
  * describing an array containing all of those JSON objects
  *
  * @param {Buffer} buffer - The source file data
- * @returns {Buffer} - The target file data
+ * @returns {Buffer} The target file data
  */
 function transformFileData (buffer) {
   return (
@@ -66,7 +70,7 @@ function transformFileData (buffer) {
  *
  * @param {string} sourcePath - A file path for a CSV file
  * @param {string} targetPath - A file path for a JSON file
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves without a return value
  */
 export default async function transformFromCsvToJson (sourcePath, targetPath) {
   /**

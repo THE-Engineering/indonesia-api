@@ -1,4 +1,6 @@
 /**
+ * @module #ingest/from-queue
+ *
  * @typedef {import('@aws-sdk/client-sqs').Message} Message
  */
 
@@ -9,7 +11,7 @@ import genSQSReceiveMessage from '#utils/gen-sqs-receive-message'
 /**
  * Initiates the generator iterator
  *
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves without a return value
  */
 export async function run () {
   for await (const { Messages: messages = [] } of genSQSReceiveMessage()) {

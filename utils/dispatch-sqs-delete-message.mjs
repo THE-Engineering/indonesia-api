@@ -1,3 +1,9 @@
+/**
+ * @module #utils/dispatch-sqs-delete-message
+ *
+ * @typedef {import('@aws-sdk/client-sqs').Message} Message
+ */
+
 import {
   SQSClient,
   DeleteMessageCommand
@@ -13,8 +19,8 @@ import handleError from '#utils/handle-error'
 /**
  * Handle the message from SQS
  *
- * @param {Message}
- * @returns {Promise<void>}
+ * @param {Message} - An SQS Message
+ * @returns {Promise<void>} Resolves without a return value
  */
 export default async function dispatchSQSDeleteMessage ({ ReceiptHandle: receiptHandle }) {
   const client = new SQSClient({ region: AWS_REGION })

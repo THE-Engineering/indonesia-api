@@ -1,11 +1,13 @@
 /**
+ * @module #server/middlewares/get-file-data-middleware
+ *
  * @typedef {import('express').Request<{}, {}, {}, RequestQuery, {}>} ExpressRequest
  * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
  * @typedef {import("express").NextFunction} NextFunction
  */
 
 /**
- * Map from query parameter keys to data file values
+ * Map from request query parameter keys to dataset values
  *
  * @typedef {Object} KeyMap
  * @property {string} [institution_id] - Key for the institution ID value
@@ -29,6 +31,12 @@
  * @property {string} [filePath] - A file path
  */
 
+/**
+ * Middleware
+ *
+ * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ */
+
 import {
   access,
   constants,
@@ -36,8 +44,19 @@ import {
   writeFile
 } from 'node:fs/promises'
 
+/**
+ * @type {string}
+ */
 const INSTITUTION_ID_KEY = 'institution_id'
+
+/**
+ * @type {string}
+ */
 const YEAR_KEY = 'year'
+
+/**
+ * @type {string}
+ */
 const SUBJECT_ID_KEY = 'subject_id'
 
 /**
@@ -45,8 +64,8 @@ const SUBJECT_ID_KEY = 'subject_id'
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
- * @param {KeyMap} keyMap - The map from query parameter keys to file data values
- * @returns {object[]} The filtered/current file data
+ * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
+ * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
  *
  * Where `institution_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
@@ -66,8 +85,8 @@ function getQueryFileDataForInstitutionId (query, fileData, { [INSTITUTION_ID_KE
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
- * @param {KeyMap} keyMap - The map from query parameter keys to file data values
- * @returns {object[]} The filtered/current file data
+ * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
+ * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
  *
  * Where `year` is present in the query we filter the file data
  * for it. Otherwise, we return the file data as-is
@@ -87,8 +106,8 @@ function getQueryFileDataForYear (query, fileData, { [YEAR_KEY]: key = YEAR_KEY 
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
- * @param {KeyMap} keyMap - The map from query parameter keys to file data values
- * @returns {object[]} The filtered/current file data
+ * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
+ * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
  *
  * Where `subject_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
@@ -104,12 +123,12 @@ function getQueryFileDataForSubjectId (query, fileData, { [SUBJECT_ID_KEY]: key 
 }
 
 /**
- * Generates the file path
+ * Generates the file data
  *
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The file data
- * @param {KeyMap} keyMap - The map from query parameter keys to file data values
- * @returns {string} The file path
+ * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
+ * @returns {object[]} Unserialised file data
  */
 function getQueryFileData (query, fileData, keyMap) {
   return getQueryFileDataForSubjectId(query, getQueryFileDataForYear(query, getQueryFileDataForInstitutionId(query, fileData, keyMap), keyMap), keyMap)
@@ -118,8 +137,8 @@ function getQueryFileData (query, fileData, keyMap) {
 /**
  * Reads and deserialises the file data
  *
- * @param {string} filePath
- * @returns {Promise<object[]>} The file data
+ * @param {string} filePath - A file path
+ * @returns {Promise<object[]>} Resolves to deserialised file data
  */
 async function readFromFilePath (filePath) {
   const fileData = await readFile(filePath)
@@ -129,9 +148,9 @@ async function readFromFilePath (filePath) {
 /**
  * Serialises and writes the file data
  *
- * @param {string} filePath
- * @param {*} value
- * @returns {Promise<void>}
+ * @param {string} filePath - A file path
+ * @param {object[]} value - Unserialised file data
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function writeToFilePath (filePath, value) {
   const fileData = JSON.stringify(value)
@@ -141,11 +160,11 @@ async function writeToFilePath (filePath, value) {
 /**
  * Generates the file data for the request query
  *
- * @param {string} toPath
- * @param {RequestQuery} query
- * @param {string} fromPath
- * @param {KeyMap} keyMap
- * @returns {Promise<void>}
+ * @param {string} toPath - A JSON file path
+ * @param {RequestQuery} query - Query parameters
+ * @param {string} fromPath - A JSON file path
+ * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function render (toPath, query, fromPath, keyMap) {
   try {
@@ -161,8 +180,8 @@ async function render (toPath, query, fromPath, keyMap) {
  * Gets the middleware for filtering and generating the file data to stream
  *
  * @param {string} fromPath - A JSON file path
- * @param {KeyMap} keyMap - A map between query parameter keys and data file values
- * @returns {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @param {KeyMap} keyMap - A map between query parameter keys and dataset values
+ * @returns {Middleware} Middleware
  */
 export default function getFileDataMiddleware (fromPath, keyMap) {
   return async function fileDataMiddleware ({ query }, { locals: { filePath: toPath = '' } }, next) {

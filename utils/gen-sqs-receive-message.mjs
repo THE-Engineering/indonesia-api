@@ -1,4 +1,6 @@
 /**
+ * @module #utils/gen-sqs-receive-message
+ *
  * @typedef {import('@aws-sdk/client-sqs').SQSClient} SQSClient
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
  */
@@ -14,11 +16,11 @@ import {
 } from '#config'
 
 /**
- * Interrogates the message to determine whether it has
+ * Interrogates the description of SQS Messages to determine whether it has
  * a `Messages` array
  *
- * @param {ReceiveMessageCommandOutput} message
- * @returns {boolean}
+ * @param {ReceiveMessageCommandOutput} commandOutput - A description of SQS Messages
+ * @returns {boolean} Whether the description of SQS Messages has a `Messages` array
  */
 function hasMessages (commandOutput) {
   if (Reflect.has(commandOutput, 'Messages')) {
@@ -32,7 +34,8 @@ function hasMessages (commandOutput) {
  * Generator to read from the SQS queue
  *
  * @generator
- * @yields {Promise<ReceiveMessageCommandOutput>}
+ * @yields {Promise<ReceiveMessageCommandOutput>} A description of SQS Messages
+ * @returns {void} Without a return value
  */
 export default async function * genSQSReceiveMessage () {
   const client = new SQSClient({ region: AWS_REGION })

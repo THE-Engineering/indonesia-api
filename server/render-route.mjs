@@ -1,10 +1,13 @@
 /**
+ * @module #server/render-route
+ *
  * @typedef {import('express').Request} ExpressRequest
  * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
  */
 
 /**
  * Response locals
+ *
  * @typedef {Object} ResponseLocals
  * @property {string} filePath - A file path
  */
@@ -21,9 +24,9 @@ import {
 } from './common/index.mjs'
 
 /**
- *
- * @param {ExpressRequest} req
- * @param {ExpressResponse} res
+ * @param {ExpressRequest} req - The Express request
+ * @param {ExpressResponse} res - The Express response
+ * @returns {void} Without a return value
  */
 export default async function renderRoute (req, res) {
   const {

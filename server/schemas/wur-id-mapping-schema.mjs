@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/wur-id-mapping-schema
+ */
+
 import Joi from 'joi'
 
 import {

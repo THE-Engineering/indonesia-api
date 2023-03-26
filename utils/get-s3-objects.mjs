@@ -1,6 +1,9 @@
 /**
+ * @module #utils/gen-s3-objects
+ *
  * @typedef {import('@aws-sdk/client-s3/dist-types/commands/ListObjectsCommand').ListObjectsCommandOutput} ListObjectsCommandOutput
  */
+
 import {
   S3Client,
   ListObjectsCommand
@@ -12,7 +15,7 @@ import {
 } from '#config'
 
 /**
- * @returns {Promise<ListObjectsCommandOutput>}
+ * @returns {Promise<ListObjectsCommandOutput>} Resolves to description of S3 bucket objects
  */
 export default async function getS3Objects () {
   const client = new S3Client({ region: AWS_REGION })

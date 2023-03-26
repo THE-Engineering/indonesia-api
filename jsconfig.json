@@ -1,35 +1,46 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "target": "ESNext",
+    "moduleResolution": "nodenext",
+    "noEmit": true,
+    "strict": true,
+    "isolatedModules": true,
+    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "paths": {
       "#server/common": [
-        "server/common/index.mjs"
+        "server/common/index"
       ],
       "#server": [
-        "server/index.mjs"
+        "server/index"
       ],
       "#config": [
-        "config/index.mjs"
+        "./config/index"
       ],
       "#config/*": [
-        "config/*.mjs"
+        "./config/*"
       ],
       "#ingest": [
-        "ingest/index.mjs"
+        "./ingest/index"
       ],
       "#ingest/*": [
-        "ingest/*.mjs"
+        "./ingest/*"
       ],
       "#utils/*": [
-        "utils/*.mjs"
+        "./utils/*"
       ]
     }
   },
   "include": [
-    "."
+    ".",
+    "./**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".source",
+    ".target",
+    ".xlsx"
   ]
 }

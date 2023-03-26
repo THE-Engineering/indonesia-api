@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/wur-metrics-schema
+ */
+
 import Joi from 'joi'
 
 import {

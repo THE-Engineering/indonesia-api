@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/impact-overall-schema
+ */
+
 import Joi from 'joi'
 
 import {

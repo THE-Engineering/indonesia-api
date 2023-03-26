@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/wur-citations-schema
+ */
+
 import Joi from 'joi'
 
 import {

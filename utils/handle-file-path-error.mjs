@@ -1,8 +1,12 @@
 /**
+ * @module #utils/handle-file-path-error
+ */
+
+/**
  * Handle file path errors
  *
- * @param {Error} e
- * @returns {void}
+ * @param {Error} e - The error
+ * @returns {void} Without a return value
  */
 export default function handleFilePathError (e) {
   const {

@@ -1,4 +1,6 @@
 /**
+ * @module #ingest/data-model
+ *
  * @typedef {import('fs').Stats} Stats
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
  * @typedef {import('@aws-sdk/client-sqs').Message} Message
@@ -52,8 +54,8 @@ import transformFromYamlToJson from './transform-from-yaml-to-json.mjs'
 /**
  * Replaces `+` characters with whitespace
  *
- * @param {string} s
- * @returns {string}
+ * @param {string} s - A file name
+ * @returns {string} A file name
  */
 function toFileName (s) {
   return s.replace(/\+/g, String.fromCodePoint(32))
@@ -62,8 +64,8 @@ function toFileName (s) {
 /**
  * Resolves `s` to a file path
  *
- * @param {string} s
- * @returns {string}
+ * @param {string} s - A file name
+ * @returns {string} A file path
  */
 function toFilePath (s) {
   return resolve(join(XLSX_DIRECTORY, s))
@@ -72,8 +74,8 @@ function toFilePath (s) {
 /**
  * When the source file is changed the target file is changed
  *
- * @param {string} filePath - an XLSX file
- * @returns {Promise<void>}
+ * @param {string} filePath - An XLSX file
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleDataModelFilePathChange (filePath) {
   try {
@@ -95,8 +97,8 @@ async function handleDataModelFilePathChange (filePath) {
 /**
  * When the source file is removed the target file is removed
  *
- * @param {string} filePath - an XLSX file
- * @returns {Promise<void>}
+ * @param {string} filePath - An XLSX file
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleDataModelFilePathRemove (filePath) {
   try {
@@ -124,8 +126,8 @@ async function handleDataModelFilePathRemove (filePath) {
 /**
  * Objects created in the S3 bucket are written to the file system
  *
- * @param {S3}
- * @returns {Promise<void>}
+ * @param {S3} - Destructured from an SQS Message
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleS3ObjectCreated ({ object: { key } = {} }) {
   try {
@@ -140,8 +142,8 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
 /**
  * Objects removed from the S3 bucket are unlinked from the file system
  *
- * @param {S3}
- * @returns {Promise<void>}
+ * @param {S3} - Destructured from an SQS Message
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleS3ObjectRemoved ({ object: { key } = {} }) {
   try {
@@ -156,8 +158,8 @@ async function handleS3ObjectRemoved ({ object: { key } = {} }) {
 /**
  * Handle the message from SQS
  *
- * @param {Message} message
- * @returns {Promise<void>}
+ * @param {Message} message - An SQS Message
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleSQSMessage (message) {
   for (const s3 of genS3(message)) {
@@ -182,22 +184,20 @@ async function handleSQSMessage (message) {
 /**
  * Handle the `PubSub` topic
  *
- * @param {string} topic
- * @param {Message} message
- * @returns {Promise<void>}
+ * @param {string} topic - The `PubSub` topic
+ * @param {Message} message - An SQS Message
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function handleSQSMessageTopic (topic, message) {
   console.log(`🛸 ${topic}`)
 
-  return (
-    await handleSQSMessage(message)
-  )
+  await handleSQSMessage(message)
 }
 
 /**
  * Syncronises the S3 bucket with the file system
  *
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves without a return value
  */
 async function syncDataModelWithS3 () {
   try {
@@ -226,7 +226,7 @@ async function syncDataModelWithS3 () {
  * format and watches for changes, returning the watcher to the
  * caller
  *
- * @returns {Promise<chokidar.FSWatcher>}
+ * @returns {Promise<chokidar.FSWatcher>} Resolves to the Chokidar watcher
  */
 export default async function ingestDataModel () {
   await ensureDir(dirname(DATA_MODEL_FILE_PATH))

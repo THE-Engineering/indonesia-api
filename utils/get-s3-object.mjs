@@ -1,3 +1,7 @@
+/**
+ * @module #utils/gen-s3-object
+ */
+
 import {
   S3Client,
   GetObjectCommand
@@ -13,11 +17,11 @@ import {
 } from '#config'
 
 /**
- * Gets the S3 signed url with the client for the command
+ * Gets the S3 signed URL with the client for the command
  *
- * @param {S3Client} client
- * @param {GetObjectCommand} command
- * @returns {Promise<string>}
+ * @param {S3Client} client - An `S3Client` instance
+ * @param {GetObjectCommand} command - The command for S3
+ * @returns {Promise<string>} Resolves to the S3 signed URL
  */
 async function toSignedUrl (client, command) {
   return (
@@ -28,8 +32,8 @@ async function toSignedUrl (client, command) {
 /**
  * Fetches the URL and resolves to a Blob
  *
- * @param {string} url - The S3 signed url
- * @returns {Promise<Blob>}
+ * @param {string} url - The S3 signed URL
+ * @returns {Promise<Blob>} Resolves to a Blob
  */
 async function getBlobFromUrl (url) {
   const response = await fetch(url)
@@ -42,8 +46,8 @@ async function getBlobFromUrl (url) {
 /**
  * Transforms a Blob to a Buffer
  *
- * @param {Blob} blob
- * @returns {Promise<Buffer>}
+ * @param {Blob} blob - A Blob
+ * @returns {Promise<Buffer>} Resolves to a Buffer
  */
 async function fromBlobToBuffer (blob) {
   const arrayBuffer = await blob.arrayBuffer()
@@ -54,8 +58,8 @@ async function fromBlobToBuffer (blob) {
 /**
  *  Gets the bucket object from S3 and resolves it to a Buffer
  *
- * @param {string} key
- * @returns {Promise<Buffer>}
+ * @param {string} key - The S3 bucket object file name
+ * @returns {Promise<Buffer>} Resolves to a Buffer
  */
 export default async function getS3Object (key) {
   const client = new S3Client({ region: AWS_REGION })

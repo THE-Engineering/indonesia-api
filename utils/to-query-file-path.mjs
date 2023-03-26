@@ -1,3 +1,7 @@
+/**
+ * @module #utils/to-query-file-path
+ */
+
 import {
   dirname,
   basename,
@@ -6,6 +10,10 @@ import {
   resolve
 } from 'node:path'
 
+/**
+ * @param {string} value - A request query parameter
+ * @returns {string} The transformed request query parameter
+ */
 function normalise (value) {
   let s = value.trim().toLowerCase().replace(/\s+/g, '-')
 

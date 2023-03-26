@@ -1,5 +1,13 @@
 /**
+ * @module #server/middlewares/get-has-file-path-middleware
+ *
  * @typedef {import("express").NextFunction} NextFunction
+ */
+
+/**
+ * Middleware
+ *
+ * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
  */
 
 import {
@@ -17,7 +25,7 @@ import {
  * Gets the middleware for validating a file exists at the JSON file path
  *
  * @param {string} filePath - A JSON file path
- * @returns {(req:Express.Request, res:Express.Response, next:NextFunction) => void} Middleware
+ * @returns {Middleware} Middleware
  */
 export default function getHasFilePathMiddleware (filePath) {
   return async function hasFilePathMiddleware (req, res, next) {

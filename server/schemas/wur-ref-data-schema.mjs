@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/wur-ref-data-schema
+ */
+
 import Joi from 'joi'
 
 import {

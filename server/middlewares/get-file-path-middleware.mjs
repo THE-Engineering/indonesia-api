@@ -1,4 +1,6 @@
 /**
+ * @module #server/middlewares/get-file-path-middleware
+ *
  * @typedef {import('express').Request<{}, {}, {}, RequestQuery, {}>} ExpressRequest
  * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
  * @typedef {import("express").NextFunction} NextFunction
@@ -6,6 +8,7 @@
 
 /**
  * Request query
+ *
  * @typedef {Object} RequestQuery
  * @property {string} [institution_id] - An institution
  * @property {string} [year] - A year
@@ -14,8 +17,15 @@
 
 /**
  * Response locals
+ *
  * @typedef {Object} ResponseLocals
  * @property {string} [filePath] - A file path
+ */
+
+/**
+ * Middleware
+ *
+ * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
  */
 
 import toQueryFilePath from '#utils/to-query-file-path'
@@ -24,8 +34,8 @@ import toQueryFilePath from '#utils/to-query-file-path'
  * Generates the file path for `institution_id` query
  *
  * @param {RequestQuery} query - The request query
- * @param {string} filePath - The current file path
- * @returns {string} The amended/current file path
+ * @param {string} filePath - The file path
+ * @returns {string} The file path (whether amended or not)
  *
  * Where `institution_id` is present in the query we append its
  * value to the file path. Otherwise, we return the file path
@@ -45,8 +55,8 @@ function getQueryFilePathForInstitutionId (query, filePath) {
  * Generates the file path for `year` query
  *
  * @param {RequestQuery} query - The request query
- * @param {string} filePath - The current file path
- * @returns {string} The amended/current file path
+ * @param {string} filePath - The file path
+ * @returns {string} The file path (whether amended or not)
  *
  * Where `year` is present in the query we append its value
  * to the file path. Otherwise, we return the file path as-is
@@ -65,8 +75,8 @@ function getQueryFilePathForYear (query, filePath) {
  * Generates the file path for `subject_id` query
  *
  * @param {RequestQuery} query - The request query
- * @param {string} filePath - The current file path
- * @returns {string} The amended/current file path
+ * @param {string} filePath - The file path
+ * @returns {string} The file path (whether amended or not)
  *
  * Where `subject_id` is present in the query we append its
  * value to the file path. Otherwise, we return the file path
@@ -97,7 +107,7 @@ function getQueryFilePath (query, filePath) {
  * Gets the middleware for generating the file path for filtered file data
  *
  * @param {string} fromPath - A JSON file path
- * @returns {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @returns {Middleware} Middleware
  */
 export default function getFilePathMiddleware (fromPath) {
   return function filePathMiddleware ({ query }, { locals }, next) {

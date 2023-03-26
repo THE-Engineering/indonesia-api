@@ -1,6 +1,14 @@
 /**
+ * @module #server/middlewares/get-schema-middleware
+ *
  * @typedef {import("joi").ObjectSchema} ObjectSchema
  * @typedef {import("express").NextFunction} NextFunction
+ */
+
+/**
+ * Middleware
+ *
+ * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
  */
 
 import {
@@ -11,7 +19,7 @@ import {
  * Gets the middleware for validating the request query with its schema
  *
  * @param {ObjectSchema} schema - A schema definition
- * @returns {(req:Express.Request, res:Express.Response, next:NextFunction) => void} Middleware
+ * @returns {Middleware} Middleware
  */
 export default function getSchemaMiddleware (schema) {
   return function schemaMiddleware ({ query = {} }, res, next) {

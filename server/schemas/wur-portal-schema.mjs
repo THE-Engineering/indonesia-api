@@ -1,3 +1,7 @@
+/**
+ * @module #server/schemas/wur-portal-schema
+ */
+
 import Joi from 'joi'
 
 import {

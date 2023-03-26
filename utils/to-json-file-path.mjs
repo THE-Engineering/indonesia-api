@@ -1,3 +1,7 @@
+/**
+ * @module #utils/to-json-file-path
+ */
+
 import {
   basename,
   extname,
