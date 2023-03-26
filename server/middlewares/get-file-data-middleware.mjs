@@ -161,7 +161,7 @@ async function writeToFilePath (filePath, value) {
  * Generates the file data for the request query
  *
  * @param {string} toPath - A JSON file path
- * @param {RequestQuery} query - Query parameters
+ * @param {RequestQuery} query - Request query parameters
  * @param {string} fromPath - A JSON file path
  * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
  * @returns {Promise<void>} Resolves without a return value
