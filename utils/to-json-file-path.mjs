@@ -14,7 +14,7 @@ import {
  *
  * @param {string} fromPath - The source file path
  * @param {string} toPath - The target directory
- * @returns {string} A file path
+ * @returns {string} The target file path
  */
 export default function toJsonFilePath (fromPath, toPath) {
   const fileName = basename(fromPath, extname(fromPath)).concat('.json')
