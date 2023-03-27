@@ -65,7 +65,7 @@ const SUBJECT_ID_KEY = 'subject_id'
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
  * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
- * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
+ * @returns {object[]} The file data (whether filtered or not)
  *
  * Where `institution_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
@@ -86,7 +86,7 @@ function getQueryFileDataForInstitutionId (query, fileData, { [INSTITUTION_ID_KE
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
  * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
- * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
+ * @returns {object[]} The file data (whether filtered or not)
  *
  * Where `year` is present in the query we filter the file data
  * for it. Otherwise, we return the file data as-is
@@ -107,7 +107,7 @@ function getQueryFileDataForYear (query, fileData, { [YEAR_KEY]: key = YEAR_KEY 
  * @param {RequestQuery} query - The request query
  * @param {object[]} fileData - The current file data
  * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
- * @returns {object[]} Unserialised file data (whether filtered or unfiltered)
+ * @returns {object[]} The file data (whether filtered or not)
  *
  * Where `subject_id` is present in the query we filter the
  * file data for it. Otherwise, we return the file data as-is
@@ -125,10 +125,10 @@ function getQueryFileDataForSubjectId (query, fileData, { [SUBJECT_ID_KEY]: key 
 /**
  * Generates the file data
  *
- * @param {RequestQuery} query - The request query
- * @param {object[]} fileData - The file data
+ * @param {RequestQuery} query - The request query parameters
+ * @param {object[]} fileData - Unserialised file data
  * @param {KeyMap} keyMap - The map from request query parameter keys to dataset values
- * @returns {object[]} Unserialised file data
+ * @returns {object[]} Unserialised file data (whether filtered or not)
  */
 function getQueryFileData (query, fileData, keyMap) {
   return getQueryFileDataForSubjectId(query, getQueryFileDataForYear(query, getQueryFileDataForInstitutionId(query, fileData, keyMap), keyMap), keyMap)
