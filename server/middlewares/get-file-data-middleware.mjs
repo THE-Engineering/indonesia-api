@@ -180,7 +180,7 @@ async function render (toPath, query, fromPath, keyMap) {
  * Gets the middleware for filtering and generating the file data to stream
  *
  * @param {string} fromPath - A JSON file path
- * @param {KeyMap} keyMap - A map between query parameter keys and dataset values
+ * @param {KeyMap} keyMap - A map from request query parameter keys to dataset values
  * @returns {Middleware} Middleware
  */
 export default function getFileDataMiddleware (fromPath, keyMap) {
