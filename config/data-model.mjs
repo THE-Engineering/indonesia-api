@@ -1,10 +1,7 @@
 /**
  * @module #config/data-model
  *
- * @typedef {Object} KeyMap
- * @property {string} [institution_id]
- * @property {string} [year]
- * @property {string} [subject_id]
+ * @typedef {Object.<string, ('institution_id'|'year'|'subject_id')>} KeyMap
  */
 
 import {
