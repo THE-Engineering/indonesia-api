@@ -132,6 +132,8 @@ async function handleS3ObjectCreated ({ object: { key } = {} }) {
     const fileName = toFileName(key)
     const filePath = toFilePath(fileName)
     await writeFile(filePath, await getS3Object(fileName))
+
+    console.log(`🛸 Created "${fileName}"`)
   } catch (e) {
     handleError(e)
   }
@@ -148,6 +150,8 @@ async function handleS3ObjectRemoved ({ object: { key } = {} }) {
     const fileName = toFileName(key)
     const filePath = toFilePath(fileName)
     await unlink(filePath)
+
+    console.log(`🛸 Removed "${fileName}"`)
   } catch (e) {
     handleError(e)
   }
@@ -177,19 +181,6 @@ async function handleSQSMessage (message) {
       }
     }
   }
-}
-
-/**
- * Handle the `PubSub` topic
- *
- * @param {string} topic - The `PubSub` topic
- * @param {Message} message - An SQS Message
- * @returns {Promise<void>} Resolves without a return value
- */
-async function handleSQSMessageTopic (topic, message) {
-  console.log(`🛸 ${topic}`)
-
-  await handleSQSMessage(message)
 }
 
 /**
@@ -243,7 +234,7 @@ export default async function ingestDataModel () {
 
   console.log('Ingesting data model complete.')
 
-  PubSub.subscribe('aws:sqs:message', handleSQSMessageTopic)
+  PubSub.subscribe('aws:sqs:message', async (topic, message) => { await handleSQSMessage(message) })
 
   /**
    *  Provided S3 had source XLSXs to sync, the Swagger YAML and JSON
