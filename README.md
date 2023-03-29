@@ -2,6 +2,16 @@
 
 ## AWS
 
+There are two paths to setting up the infra required; use the terraform script in `infra` or use the below guide to do it by hand.
+
+```
+cd infra/
+aws-vault exec <ENVIROMENT_USER_NAME> -- terraform init
+aws-vault exec <ENVIROMENT_USER_NAME> -- terraform apply
+```
+
+Alternatively, by hand:
+
 - Step 1 - [Create an Access Key](docs/create-an-access-key.md)
 - Step 2 - [Decide your Region](docs/decide-your-region.md)
 - Step 3 - [Create a queue with Amazon SQS (Simple Queue Service)](docs/create-a-queue.md)
