@@ -1,10 +1,8 @@
 /**
  * @module #ingest/data-model
  *
- * @typedef {import('fs').Stats} Stats
- * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
  * @typedef {import('@aws-sdk/client-sqs').Message} Message
- * @typedef {import('../utils/gen-s3.mjs').S3} S3
+ * @typedef {import('#utils/gen-s3').S3} S3
  */
 
 import {
@@ -226,7 +224,7 @@ async function syncDataModelWithS3 () {
  * format and watches for changes, returning the watcher to the
  * caller
  *
- * @returns {Promise<chokidar.FSWatcher>} Resolves to the Chokidar watcher
+ * @returns {Promise<chokidar.FSWatcher>} Resolves to a Chokidar file system watcher
  */
 export default async function ingestDataModel () {
   await ensureDir(dirname(DATA_MODEL_FILE_PATH))

@@ -1,7 +1,5 @@
 /**
  * @module #ingest/from-queue
- *
- * @typedef {import('@aws-sdk/client-sqs').Message} Message
  */
 
 import PubSub from 'pubsub-js'
@@ -22,6 +20,11 @@ export async function run () {
   }
 }
 
+/**
+ * Initiates the generator iterator initiator
+ *
+ * @returns {void} Without a return value
+ */
 export default function ingestFromQueue () {
   /**
    *  Initiate the generator iterator

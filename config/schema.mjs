@@ -1,7 +1,12 @@
 /**
  * @module #config/schema
+ *
+ * @typedef {import('#config/args').ArgsMap} ArgsMap
  */
 
+/**
+ * @type {ArgsMap}
+ */
 import args from './args.mjs'
 
 /**

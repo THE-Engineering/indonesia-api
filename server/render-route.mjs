@@ -1,15 +1,9 @@
 /**
  * @module #server/render-route
  *
+ * @typedef {import('#server/render-route').ResponseLocals} ResponseLocals
  * @typedef {import('express').Request} ExpressRequest
  * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
- */
-
-/**
- * Response locals
- *
- * @typedef {Object} ResponseLocals
- * @property {string} filePath - A file path
  */
 
 import {

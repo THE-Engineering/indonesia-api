@@ -3,10 +3,22 @@
   "extends": "standard",
   "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "ecmaVersion": 2020,
+    "ecmaVersion": "latest",
     "sourceType": "module"
   },
   "rules": {
     "valid-jsdoc": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "*.mts"
+      ],
+      "plugins": [
+        "@typescript-eslint"
+      ],
+      "extends": "standard-with-typescript",
+      "parser": "@typescript-eslint/parser"
+    }
+  ]
 }

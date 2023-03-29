@@ -1,9 +1,7 @@
 /**
  * @module #server/common
  *
- * @typedef {Object} CommonError
- * @property {number} status
- * @property {string} message
+ * @typedef {import('#server/common').CommonError} CommonError
  */
 
 /**

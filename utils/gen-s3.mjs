@@ -2,14 +2,7 @@
  * @module #utils/gen-s3
  *
  * @typedef {import('@aws-sdk/client-sqs').Message} Message
- */
-
-/**
- * S3
- *
- * @typedef {Object} S3
- * @property {string} configurationId
- * @property {{key: string}} [object]
+ * @typedef {import('#utils/gen-s3').S3} S3
  */
 
 /**

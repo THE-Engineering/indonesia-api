@@ -1,47 +1,8 @@
 /**
  * @module #config/args
  *
- * @typedef {import('./defaults.mjs').BasicAuth} BasicAuth
- */
-
-/**
- * Constants
- *
- * @typedef {Object} Args
- * @property {string} XLSX_DIRECTORY
- * @property {string} SOURCE_DIRECTORY
- * @property {string} TARGET_DIRECTORY
- * @property {string} DATA_MODEL_FILE_NAME
- * @property {string} SWAGGER_YAML_FILE_PATH
- * @property {string} SWAGGER_JSON_FILE_PATH
- * @property {string} IMPACT_OVERALL_DATASET_NAME
- * @property {string} WUR_PORTAL_DATASET_NAME
- * @property {string} WUR_CITATIONS_DATASET_NAME
- * @property {string} WUR_METRICS_DATASET_NAME
- * @property {string} WUR_ID_MAPPING_DATASET_NAME
- * @property {string} WUR_REF_DATA_DATASET_NAME
- * @property {string} IMPACT_OVERALL_COMPONENT_SCHEMA
- * @property {string} WUR_PORTAL_COMPONENT_SCHEMA
- * @property {string} WUR_CITATIONS_COMPONENT_SCHEMA
- * @property {string} WUR_METRICS_COMPONENT_SCHEMA
- * @property {string} WUR_ID_MAPPING_COMPONENT_SCHEMA
- * @property {string} WUR_REF_DATA_COMPONENT_SCHEMA
- * @property {string} IMPACT_OVERALL_LABEL
- * @property {string} WUR_PORTAL_LABEL
- * @property {string} WUR_CITATIONS_LABEL
- * @property {string} WUR_METRICS_LABEL
- * @property {string} WUR_ID_MAPPING_LABEL
- * @property {string} WUR_REF_DATA_LABEL
- * @property {string} IMPACT_OVERALL_FILE_NAME
- * @property {string} WUR_PORTAL_FILE_NAME
- * @property {string} WUR_CITATIONS_FILE_NAME
- * @property {string} WUR_METRICS_FILE_NAME
- * @property {string} WUR_ID_MAPPING_FILE_NAME
- * @property {string} WUR_REF_DATA_FILE_NAME
- * @property {number} SCHEMA_MIN_YEAR
- * @property {number} SCHEMA_MAX_YEAR
- * @property {BasicAuth} BASIC_AUTH_USERS
- * @property {number} PORT
+ * @typedef {import('#config/args').Args} Args
+ * @typedef {import('#config/args').ArgsMap} ArgsMap
  */
 
 import 'dotenv/config'
@@ -156,4 +117,7 @@ export const args = nconf.argv({ transform }).env({ transform }).defaults({
   PORT: DEFAULT_PORT
 }).get()
 
+/**
+ * @type {ArgsMap}
+ */
 export default new Map(Object.entries(args))

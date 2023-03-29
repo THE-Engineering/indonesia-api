@@ -26,7 +26,7 @@
 /**
  * Row
  *
- * @typedef {(string|number|undefined)[]} Row
+ * @typedef {(string | number | undefined)[]} Row
  */
 
 /**
@@ -979,7 +979,7 @@ function getResponses ({
 /**
  * Transform from XLSX to YAML
  *
- * @param {Buffer|string} xlsx - The XLSX document
+ * @param {Buffer | string} xlsx - The XLSX document
  * @returns {string} YAML
  */
 export default function transformFromXlsxToYaml (xlsx) {

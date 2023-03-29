@@ -1,40 +1,9 @@
 /**
  * @module #server/middlewares/get-file-data-middleware
  *
- * @typedef {import('express').Request<{}, {}, {}, RequestQuery, {}>} ExpressRequest
- * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
- * @typedef {import("express").NextFunction} NextFunction
- */
-
-/**
- * Map from request query parameter keys to dataset values
- *
- * @typedef {Object} KeyMap
- * @property {string} [institution_id] - Key for the institution ID value
- * @property {string} [year] - Key for the year value
- * @property {string} [subject_id] - Key for the subject ID value
- */
-
-/**
- * Request query
- *
- * @typedef {Object} RequestQuery
- * @property {string} [institution_id] - An institution
- * @property {string} [year] - A year
- * @property {string} [subject_id] - A subject
- */
-
-/**
- * Response locals
- *
- * @typedef {Object} ResponseLocals
- * @property {string} [filePath] - A file path
- */
-
-/**
- * Middleware
- *
- * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @typedef {import('#server/middleware/get-file-data-middleware').RequestQuery} RequestQuery
+ * @typedef {import('#server/middleware/get-file-data-middleware').KeyMap} KeyMap
+ * @typedef {import('#server/middleware/get-file-data-middleware').Middleware} Middleware
  */
 
 import {

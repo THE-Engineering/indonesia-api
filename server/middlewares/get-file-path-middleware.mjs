@@ -1,31 +1,8 @@
 /**
  * @module #server/middlewares/get-file-path-middleware
  *
- * @typedef {import('express').Request<{}, {}, {}, RequestQuery, {}>} ExpressRequest
- * @typedef {import('express').Response<{}, ResponseLocals>} ExpressResponse
- * @typedef {import("express").NextFunction} NextFunction
- */
-
-/**
- * Request query
- *
- * @typedef {Object} RequestQuery
- * @property {string} [institution_id] - An institution
- * @property {string} [year] - A year
- * @property {string} [subject_id] - A subject
- */
-
-/**
- * Response locals
- *
- * @typedef {Object} ResponseLocals
- * @property {string} [filePath] - A file path
- */
-
-/**
- * Middleware
- *
- * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @typedef {import('#server/middleware/get-file-path-middleware').RequestQuery} RequestQuery
+ * @typedef {import('#server/middleware/get-file-path-middleware').Middleware} Middleware
  */
 
 import toQueryFilePath from '#utils/to-query-file-path'

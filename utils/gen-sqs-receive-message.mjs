@@ -1,7 +1,6 @@
 /**
  * @module #utils/gen-sqs-receive-message
  *
- * @typedef {import('@aws-sdk/client-sqs').SQSClient} SQSClient
  * @typedef {import('@aws-sdk/client-sqs').ReceiveMessageCommandOutput} ReceiveMessageCommandOutput
  */
 
@@ -35,7 +34,7 @@ function hasMessages (commandOutput) {
  *
  * @generator
  * @yields {Promise<ReceiveMessageCommandOutput>} A description of SQS Messages
- * @returns {void} Without a return value
+ * @returns {Promise<void>} Resolves without a return value
  */
 export default async function * genSQSReceiveMessage () {
   const client = new SQSClient({ region: AWS_REGION })

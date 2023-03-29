@@ -1,13 +1,7 @@
 /**
  * @module #server/middlewares/get-has-file-path-middleware
  *
- * @typedef {import("express").NextFunction} NextFunction
- */
-
-/**
- * Middleware
- *
- * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @typedef {import('#server/middleware/get-has-file-path-middleware').Middleware} Middleware
  */
 
 import {

@@ -1,14 +1,8 @@
 /**
  * @module #server/middlewares/get-schema-middleware
  *
- * @typedef {import("joi").ObjectSchema} ObjectSchema
- * @typedef {import("express").NextFunction} NextFunction
- */
-
-/**
- * Middleware
- *
- * @typedef {(req:ExpressRequest, res:ExpressResponse, next:NextFunction) => void} Middleware
+ * @typedef {import('#server/middleware/get-schema-middleware').Middleware} Middleware
+ * @typedef {import('joi').ObjectSchema} ObjectSchema
  */
 
 import {

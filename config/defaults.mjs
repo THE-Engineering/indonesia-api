@@ -3,14 +3,6 @@
  */
 
 /**
- * Basic auth
- *
- * @typedef {Object} BasicAuth
- * @property {string} [username]
- * @property {string} [password]
- */
-
-/**
  * @constant
  * @type {string}
  * @default

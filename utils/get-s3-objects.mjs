@@ -1,7 +1,7 @@
 /**
  * @module #utils/gen-s3-objects
  *
- * @typedef {import('@aws-sdk/client-s3/dist-types/commands/ListObjectsCommand').ListObjectsCommandOutput} ListObjectsCommandOutput
+ * @typedef {import('@aws-sdk/client-s3/dist-types/commands').ListObjectsCommandOutput} ListObjectsCommandOutput
  */
 
 import {

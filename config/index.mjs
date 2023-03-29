@@ -1,9 +1,13 @@
 /**
  * @module #config
  *
- * @typedef {import('./defaults.mjs').BasicAuth} BasicAuth
+ * @typedef {import('#config/args').ArgsMap} ArgsMap
+ * @typedef {import('#config/defaults').BasicAuth} BasicAuth
  */
 
+/**
+ * @type {ArgsMap}
+ */
 import args from './args.mjs'
 
 /**
@@ -27,6 +31,6 @@ export const AWS_QUEUE_URL = args.get('AWS_QUEUE_URL')
 export const BASIC_AUTH_USERS = args.get('BASIC_AUTH_USERS')
 
 /**
- * @type {string}
+ * @type {number}
  */
 export const PORT = args.get('PORT')
