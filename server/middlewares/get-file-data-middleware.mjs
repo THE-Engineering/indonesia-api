@@ -13,6 +13,8 @@ import {
   writeFile
 } from 'node:fs/promises'
 
+import handleError from '#utils/handle-error'
+
 /**
  * @type {string}
  */
@@ -137,11 +139,10 @@ async function writeToFilePath (filePath, value) {
  */
 async function render (toPath, query, fromPath, keyMap) {
   try {
-    await writeToFilePath(toPath, getQueryFileData(query, await readFromFilePath(fromPath), keyMap))
-  } catch ({
-    message
-  }) {
-    if (!message.startsWith('Unterminated string in JSON')) console.error(`💥 ${message}`)
+    const fileData = await readFromFilePath(fromPath)
+    await writeToFilePath(toPath, getQueryFileData(query, fileData, keyMap))
+  } catch (e) {
+    handleError(e)
   }
 }
 
