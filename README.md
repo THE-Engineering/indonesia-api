@@ -16,7 +16,7 @@ While this application is running it will listen for messages from AWS with Amaz
 
 Those messages are to notify this application of changes in Amazon S3
 
-Wherever possible you should make changes in AWS _before [starting this application](#serving-the-json)_, or else _wait for the rocket_ before making changes in AWS
+Wherever possible you should upload files into AWS _before [starting this application](#serving-the-json)_, or else _wait for the rocket_ before making changes in AWS
 
 <img alt="Screenshot showing output in the terminal at application start" src="docs/images/rocket.png" width="245px" />
 
