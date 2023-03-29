@@ -16,7 +16,7 @@ While this application is running it will listen for messages from AWS with Amaz
 
 Those messages are to notify this application of changes in Amazon S3
 
-Wherever possible you should upload files into AWS _before [starting this application](#serving-the-json)_, or else _wait for the rocket_ before making changes in AWS
+Wherever possible you should upload files into AWS _before [starting the application](#serving-the-json)_, or else _wait for the rocket_ before making changes to files AWS
 
 <img alt="Screenshot showing output in the terminal at application start" src="docs/images/rocket.png" width="245px" />
 
@@ -30,7 +30,7 @@ Wherever possible you should upload files into AWS _before [starting this applic
 - Step 6 - [Edit the bucket to send events to the queue](docs/edit-the-bucket.md)
 - Step 7 - [Review your `.env` file](docs/review-your-env.md)
 
-Upload files into AWS _before starting this application_, or else _wait for the 🚀_!
+Upload files into AWS _before starting the application_, or else _wait for the 🚀_!
 
 ## Configuration
 
@@ -166,7 +166,7 @@ Start the server in a terminal
 npm start
 ```
 
-Wherever possible, upload files into AWS _before_ starting the application, or _wait for the rocket_ before making changes to files in AWS
+Wherever possible, upload files into AWS _before starting the application_, or else _wait for the rocket_ before making changes to files in AWS
 
 <img alt="Screenshot showing output in the terminal at application start" src="docs/images/rocket.png" width="245px" />
 
