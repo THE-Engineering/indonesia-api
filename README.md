@@ -170,120 +170,13 @@ Wherever possible, upload files into AWS _before_ starting the application, or _
 
 <img alt="Screenshot showing output in the terminal at application start" src="docs/images/rocket.png" width="245px" />
 
-You can request data from any of six routes
+You should prefer [Swagger](#swagger) for ensuring that the API is available and correct, but you can also make [API requests with `curl`](docs/api-requests-with-curl.md)
 
-- `/impact-overall`
-- `/wur-portal`
-- `/wur-citations`
-- `/wur-metrics`
-- `/wur-id-mapping`
-- `/wur-ref-data`
-
-And each route accepts up to three query parameters (which may be combined)
-
-- `institution_id`
-- `year`
-- `subject_id`
-
-An `institution_id` is a string of the form `i-00000000` (where each `0` is an integer between `0` and `9` inclusive)
-
-A `year` is a year (between 2001 and the current year inclusive)
-
-A `subject_id` is a string
-
-Response data is filtered based on the request query parameter values
-
-#### `/impact-overall`
-
-Accepts
-
-- `institution_id`
-- `year`
-
-#### `/wur-portal`
-
-Accepts
-
-- `institution_id`
-- `year`
-- `subject_id`
-
-#### `/wur-citations`
-
-Accepts
-
-- `institution_id`
-- `year`
-- `subject_id`
-
-#### `/wur-metrics`
-
-Accepts
-
-- `institution_id`
-- `year`
-- `subject_id`
-
-#### `/wur-id-mapping`
-
-Accepts
-
-- `institution_id`
-
-#### `/wur-ref-data`
-
-Accepts
-
-- `institution_id`
-
-### `curl`
-
-Use `curl` in another terminal to request data
-
-Assuming the server is running on port `80` with Basic Auth credentials `{"username":"password"}`
-
-```bash
-curl http://localhost/wur-portal \
-  -u username:password
-```
-
-```bash
-curl http://localhost/wur-citations \
-  -u username:password
-```
-
-```bash
-curl http://localhost/wur-metrics \
-  -u username:password
-```
-
-And using the route `/wur-portal` with query parameters
-
-```bash
-curl http://localhost/wur-portal?institution_id=i-33670869 \
-  -u username:password
-```
-
-```bash
-curl http://localhost/wur-portal?year=2020 \
-  -u username:password
-```
-
-```bash
-curl http://localhost/wur-portal?subject_id=law \
-  -u username:password
-```
-
-Or, combined
-
-```bash
-curl http://localhost/wur-portal?institution_id=i-33670869&year=2020&subject_id=law \
-  -u username:password
-```
+All of the application endpoints are _expected_ to return a `404` response when there is no data _on the file system_ (which would mean either no CSV, or an incorrectly named CSV)
 
 ## Swagger
 
-The Swagger configuration is generated automatically from the Data Model at application start
+Swagger configuration is generated automatically from `Data Model.xlsx` at application start
 
 Assuming the server is running on port `80` with Basic Auth credentials `{"username":"password"}` Swagger JSON is available at the location
 
@@ -296,6 +189,15 @@ Swagger UI is available at the location
 ```
 http://localhost/api-docs
 ```
+
+### Debugging
+
+The Swagger endpoints _expected_ to return a `404` response when there is no Swagger configuration _on the file system_
+
+- The default file path for Swagger YAML is `./swagger.yaml`
+- The default file path for Swagger JSON is `./swagger.json`
+
+If neither of these files has been generated ensure that `Data Model.xlsx` exists, has the correct name, and is valid
 
 ## Docker
 
@@ -324,21 +226,21 @@ curl http://localhost:3001/wur-portal \
 
 All files ingested into the application at application start are contained in either `XLSX_DIRECTORY` (for the Data Model) or `SOURCE_DIRECTORY` (for the Data)
 
-There is a two-step _transformation_ process which takes the CSV source files and generates the JSON target files in `TARGET_DIRECTORY`
+There is a two-step _transformation_ of the CSV source files in `SOURCE_DIRECTORY` into the JSON target files in `TARGET_DIRECTORY`
 
-- In the first step, a _sibling_ JSON file is written beside each CSV in `SOURCE_DIRECTORY`
-- In the second step, the sibling is transformed again to another JSON file which is written to `TARGET_DIRECTORY`
+- In the first step, a CSV file in `SOURCE_DIRECTORY` is transformed into a _sibling_ JSON file in the same directory
+- In the second step, a _sibling_ JSON file in `SOURCE_DIRECTORY` is transformed _again_ into another JSON file in `TARGET_DIRECTORY`
 
-Each endpoint serves the JSON from `TARGET_DIRECTORY` so in the event that an endpoint is returning a `404` response:
+Each endpoint serves its JSON from `TARGET_DIRECTORY` so in the event that an endpoint is returning a `404` response:
 
-- Confirm that the appropriate CSV file exists in `SOURCE_DIRECTORY` and it has the expected structure and content
+- Confirm that the appropriate CSV file exists in `SOURCE_DIRECTORY` and it is valid
 - Confirm that the _sibling_ JSON file has been created in the same directory
-- Confirm that the appropriate JSON file exists in `TARGET_DIRECTORY` and that it is valid
+- Confirm that the appropriate JSON file exists in `TARGET_DIRECTORY` and it is valid
 
 You can use a JSON validator to validate the content of the JSON files in `TARGET_DIRECTORY`. Invalid JSON means a read/write fault during ingestion which can be corrected by restarting the application. Otherwise, the _most likely_ cause of an error (particularly where there is no other logging) is a file name mismatch, or _typo_, at AWS
 
-An endpoint is _expected_ to return a `404` response when there is no data _on the file system_
+An endpoint is _expected_ to return a `404` response when there is no data _on the file system_ (which means either _no JSON file_ or _no CSV_)
 
 Otherwise, "no data" is indicated by a JSON array `[]`
 
-Errors should log with a 💥
+Errors are logged with a 💥
