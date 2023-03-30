@@ -1,0 +1,72 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.0.1
+
+commands:
+  docker_login:
+    steps:
+      - docker/check:
+          docker-password: ARTIFACTORY_PASSWORD
+          docker-username: ARTIFACTORY_USER
+          registry: thewui.jfrog.io
+
+  add_tag_to_env:
+    steps:
+      - run:
+          name: 'Add BRANCH_TAG to env'
+          command: |
+            echo 'export BRANCH_TAG="${CIRCLE_BRANCH//\//-}-${CIRCLE_SHA1:0:7}"' >> $BASH_ENV
+
+  build_docker_image:
+    parameters:
+      image:
+        type: string
+      dockerfile:
+        type: string
+        default: Dockerfile
+      path:
+        type: string
+        default: .
+    steps:
+      - add_tag_to_env
+      - run:
+          name: Check if <<parameters.image>>:${BRANCH_TAG} already built
+          command: |
+            if docker manifest inspect thewui.jfrog.io/test-docker-master/<<parameters.image>>:${BRANCH_TAG} &>/dev/null; then
+              echo "Image already exists in repository, skipping build"
+              circleci-agent step halt
+            fi
+          environment:
+            DOCKER_CLI_EXPERIMENTAL: enabled
+      - docker/build:
+          step-name: Build <<parameters.image>> image
+          image: test-docker-master/<<parameters.image>>
+          registry: thewui.jfrog.io
+          path: <<parameters.path>>
+          dockerfile: <<parameters.dockerfile>>
+          tag: $BRANCH_TAG
+      - docker/push:
+          step-name: Push <<parameters.image>>
+          image: test-docker-master/<<parameters.image>>
+          registry: thewui.jfrog.io
+          tag: $BRANCH_TAG
+
+jobs:
+  build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker:
+          version: 20.10.7
+          docker_layer_caching: true
+      - checkout
+      - docker_login
+      - build_docker_image:
+          image: indonesian-api
+
+workflows:
+  ci-workflow:
+    jobs:
+      - build:
+          context:
+            - Artifactory
