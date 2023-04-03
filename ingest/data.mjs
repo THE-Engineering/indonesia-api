@@ -46,6 +46,10 @@ import handleError from '#utils/handle-error'
 
 import transformFromCsvToJson from './transform-from-csv-to-json.mjs'
 
+const CSV_CREATED_EVENT = 'csv-created-event'
+
+const CSV_REMOVED_EVENT = 'csv-removed-event'
+
 /**
  * @type {string}
  */
@@ -158,12 +162,12 @@ async function handleSQSMessage (message) {
       configurationId = ''
     } = s3
 
-    if (configurationId.startsWith('CSVCreated')) {
+    if (configurationId.startsWith(CSV_CREATED_EVENT)) {
       await handleS3ObjectCreated(s3)
 
       await dispatchSQSDeleteMessage(message)
     } else {
-      if (configurationId.startsWith('CSVRemoved')) {
+      if (configurationId.startsWith(CSV_REMOVED_EVENT)) {
         await handleS3ObjectRemoved(s3)
 
         await dispatchSQSDeleteMessage(message)

@@ -49,6 +49,10 @@ import handleError from '#utils/handle-error'
 import transformFromXlsxToYaml from './transform-from-xlsx-to-yaml.mjs'
 import transformFromYamlToJson from './transform-from-yaml-to-json.mjs'
 
+const XLSX_CREATED_EVENT = 'xlsx-created-event'
+
+const XLSX_REMOVED_EVENT = 'xlsx-removed-event'
+
 /**
  * Replaces `+` characters with whitespace
  *
@@ -169,12 +173,12 @@ async function handleSQSMessage (message) {
       configurationId = ''
     } = s3
 
-    if (configurationId.startsWith('XLSXCreated')) {
+    if (configurationId.startsWith(XLSX_CREATED_EVENT)) {
       await handleS3ObjectCreated(s3)
 
       await dispatchSQSDeleteMessage(message)
     } else {
-      if (configurationId.startsWith('XLSXRemoved')) {
+      if (configurationId.startsWith(XLSX_REMOVED_EVENT)) {
         await handleS3ObjectRemoved(s3)
 
         await dispatchSQSDeleteMessage(message)
