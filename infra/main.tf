@@ -72,28 +72,28 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     id            = "xlsx-created-event"
     queue_arn     = aws_sqs_queue.file_change_queue.arn
     events        = ["s3:ObjectCreated:*"]
-    filter_suffix = "*.xlsx"
+    filter_suffix = ".xlsx"
   }
 
   queue {
     id            = "xlsx-removed-event"
     queue_arn     = aws_sqs_queue.file_change_queue.arn
     events        = ["s3:ObjectRemoved:*"]
-    filter_suffix = "*.xlsx"
+    filter_suffix = ".xlsx"
   }
 
   queue {
     id            = "csv-created-event"
     queue_arn     = aws_sqs_queue.file_change_queue.arn
     events        = ["s3:ObjectCreated:*"]
-    filter_suffix = "*.csv"
+    filter_suffix = ".csv"
   }
 
   queue {
     id            = "csv-removed-event"
     queue_arn     = aws_sqs_queue.file_change_queue.arn
     events        = ["s3:ObjectRemoved:*"]
-    filter_suffix = "*.csv"
+    filter_suffix = ".csv"
   }
 }
 

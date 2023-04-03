@@ -18,18 +18,18 @@ Click the "Properties" tab to select it and scroll down until the "Event notific
 
 You will create four event notifications. Each of these event names is _required_
 
-1. [`XLSXCreated`](#create-event-notification-xlsxcreated)
-1. [`XLSXRemoved`](#create-event-notification-xlsxremoved)
-1. [`CSVCreated`](#create-event-notification-csvcreated)
-1. [`CSVRemoved`](#create-event-notification-csvremoved)
+1. [`xlsx-created-event`](#create-event-notification-xlsx-created-event)
+1. [`xlsx-removed-event`](#create-event-notification-xlsx-removed-event)
+1. [`csv-created-event`](#create-event-notification-csv-created-event)
+1. [`csv-removed-event`](#create-event-notification-csv-removed-event)
 
-## Create event notification "XLSXCreated"
+## Create event notification "xlsx-created-event"
 
 With the "Event notifications" panel visible, click "Create event notification" on the right above the table to create an event notification
 
 In the General configuration panel _at the top of the page_
 
-- Enter "XLSXCreated" in the "Event name" field
+- Enter "xlsx-created-event" in the "Event name" field
 - Enter ".xlsx" in the "Suffix - optional" field
 
 In the Event types panel _below the General configuration panel_
@@ -60,13 +60,13 @@ Confirm that the event notifications table has a row with the event notification
 
 ![Amazon S3 Console edit bucket page - event notifications - object created](images/s3-edit-bucket-page-event-notifications-xlsx-created.png)
 
-## Create event notification "XLSXRemoved"
+## Create event notification "xlsx-removed-event"
 
 With the "Event notifications" panel visible, click "Create event notification" on the right above the table to create another event notification
 
 In the General configuration panel _at the top of the page_
 
-- Enter "XLSXRemoved" in the "Event name" field
+- Enter "xlsx-removed-event" in the "Event name" field
 - Enter ".xlsx" in the "Suffix - optional" field
 
 In the Event types panel _below the General configuration panel_
@@ -97,13 +97,13 @@ Confirm that the event notifications table has a row with the event notification
 
 ![Amazon S3 Console edit bucket page - event notifications - object removed](images/s3-edit-bucket-page-event-notifications-xlsx-removed.png)
 
-## Create event notification "CSVCreated"
+## Create event notification "csv-created-event"
 
 With the "Event notifications" panel visible, click "Create event notification" on the right above the table to create an event notification
 
 In the General configuration panel _at the top of the page_
 
-- Enter "CSVCreated" in the "Event name" field
+- Enter "csv-created-event" in the "Event name" field
 - Enter ".csv" in the "Suffix - optional" field
 
 In the Event types panel _below the General configuration panel_
@@ -134,13 +134,13 @@ Confirm that the event notifications table has a row with the event notification
 
 ![Amazon S3 Console edit bucket page - event notifications - object created](images/s3-edit-bucket-page-event-notifications-csv-created.png)
 
-## Create event notification "CSVRemoved"
+## Create event notification "csv-removed-event"
 
 With the "Event notifications" panel visible, click "Create event notification" on the right above the table to create another event notification
 
 In the General configuration panel _at the top of the page_
 
-- Enter "CSVRemoved" in the "Event name" field
+- Enter "csv-removed-event" in the "Event name" field
 - Enter ".csv" in the "Suffix - optional" field
 
 In the Event types panel _below the General configuration panel_
