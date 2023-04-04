@@ -64,6 +64,13 @@ function transform ({ key, value }) {
     }
   }
 
+  if (key === 'log-error' || key === 'logError') {
+    return {
+      key,
+      value: String(value) === 'true'
+    }
+  }
+
   return {
     key,
     value

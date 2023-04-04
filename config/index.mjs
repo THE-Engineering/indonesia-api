@@ -11,6 +11,11 @@
 import args from './args.mjs'
 
 /**
+ * @type {boolean}
+ */
+export const logError = args.get('log-error')
+
+/**
  * @type {string}
  */
 export const AWS_REGION = args.get('AWS_REGION')

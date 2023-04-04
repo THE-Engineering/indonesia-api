@@ -2,6 +2,8 @@
  * @module #utils/handle-error
  */
 
+import hasLogError from './has-log-error.mjs'
+
 /**
  * Handle errors
  *
@@ -19,4 +21,6 @@ export default function handleError (e) {
       ? `💥 ${code} - ${message}`
       : `💥 ${message}`
   )
+
+  if (hasLogError()) console.error(e)
 }

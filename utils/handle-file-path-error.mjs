@@ -2,6 +2,8 @@
  * @module #utils/handle-file-path-error
  */
 
+import hasLogError from './has-log-error.mjs'
+
 /**
  * Handle file path errors
  *
@@ -24,4 +26,6 @@ export default function handleFilePathError (e) {
         : `💥 ${message}`
     )
   }
+
+  if (hasLogError()) console.error(e)
 }
