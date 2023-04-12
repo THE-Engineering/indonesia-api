@@ -56,11 +56,11 @@ const app = express()
 
 app.disable('x-powered-by')
 
-app.use(basicAuth({
-  users: BASIC_AUTH_USERS,
-  challenge: true,
-  realm: 'indonesia-api'
-}))
+// app.use(basicAuth({
+//   users: BASIC_AUTH_USERS,
+//   challenge: true,
+//   realm: 'indonesia-api'
+// }))
 
 ingestDataModel()
   .then(ingestData)
